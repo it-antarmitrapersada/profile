@@ -1,0 +1,2323 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/lib/generated/prisma"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["auth", "public"]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model audit_log_entries {
+  instance_id String?   @db.Uuid
+  id          String    @id @db.Uuid
+  payload     Json?     @db.Json
+  created_at  DateTime? @db.Timestamptz(6)
+  ip_address  String    @default("") @db.VarChar(64)
+
+  @@index([instance_id], map: "audit_logs_instance_id_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model custom_oauth_providers {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_type           String
+  identifier              String    @unique
+  name                    String
+  client_id               String
+  client_secret           String
+  acceptable_client_ids   String[]  @default([])
+  scopes                  String[]  @default([])
+  pkce_enabled            Boolean   @default(true)
+  attribute_mapping       Json      @default("{}")
+  authorization_params    Json      @default("{}")
+  enabled                 Boolean   @default(true)
+  email_optional          Boolean   @default(false)
+  issuer                  String?
+  discovery_url           String?
+  skip_nonce_check        Boolean   @default(false)
+  cached_discovery        Json?
+  discovery_cached_at     DateTime? @db.Timestamptz(6)
+  authorization_url       String?
+  token_url               String?
+  userinfo_url            String?
+  jwks_uri                String?
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime  @default(now()) @db.Timestamptz(6)
+  custom_claims_allowlist String[]  @default([])
+
+  @@index([created_at])
+  @@index([enabled])
+  @@index([identifier])
+  @@index([provider_type])
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model flow_state {
+  id                     String                 @id @db.Uuid
+  user_id                String?                @db.Uuid
+  auth_code              String?
+  code_challenge_method  code_challenge_method?
+  code_challenge         String?
+  provider_type          String
+  provider_access_token  String?
+  provider_refresh_token String?
+  created_at             DateTime?              @db.Timestamptz(6)
+  updated_at             DateTime?              @db.Timestamptz(6)
+  authentication_method  String
+  auth_code_issued_at    DateTime?              @db.Timestamptz(6)
+  invite_token           String?
+  referrer               String?
+  oauth_client_state_id  String?                @db.Uuid
+  linking_target_id      String?                @db.Uuid
+  email_optional         Boolean                @default(false)
+  saml_relay_states      saml_relay_states[]
+
+  @@index([created_at(sort: Desc)])
+  @@index([auth_code], map: "idx_auth_code")
+  @@index([user_id, authentication_method], map: "idx_user_id_auth_method")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model identities {
+  provider_id     String
+  user_id         String    @db.Uuid
+  identity_data   Json
+  provider        String
+  last_sign_in_at DateTime? @db.Timestamptz(6)
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+  email           String?   @default(dbgenerated("lower((identity_data ->> 'email'::text))"))
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider_id, provider], map: "identities_provider_id_provider_unique")
+  @@index([email])
+  @@index([user_id])
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model instances {
+  id              String    @id @db.Uuid
+  uuid            String?   @db.Uuid
+  raw_base_config String?
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model mfa_amr_claims {
+  session_id            String   @db.Uuid
+  created_at            DateTime @db.Timestamptz(6)
+  updated_at            DateTime @db.Timestamptz(6)
+  authentication_method String
+  id                    String   @id(map: "amr_id_pk") @db.Uuid
+  sessions              sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([session_id, authentication_method], map: "mfa_amr_claims_session_id_authentication_method_pkey")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model mfa_challenges {
+  id                     String      @id @db.Uuid
+  factor_id              String      @db.Uuid
+  created_at             DateTime    @db.Timestamptz(6)
+  verified_at            DateTime?   @db.Timestamptz(6)
+  ip_address             String      @db.Inet
+  otp_code               String?
+  web_authn_session_data Json?
+  mfa_factors            mfa_factors @relation(fields: [factor_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "mfa_challenges_auth_factor_id_fkey")
+
+  @@index([created_at(sort: Desc)], map: "mfa_challenge_created_at_idx")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model mfa_factors {
+  id                           String           @id @db.Uuid
+  user_id                      String           @db.Uuid
+  friendly_name                String?
+  factor_type                  factor_type
+  status                       factor_status
+  created_at                   DateTime         @db.Timestamptz(6)
+  updated_at                   DateTime         @db.Timestamptz(6)
+  secret                       String?
+  phone                        String?
+  last_challenged_at           DateTime?        @unique @db.Timestamptz(6)
+  web_authn_credential         Json?
+  web_authn_aaguid             String?          @db.Uuid
+  last_webauthn_challenge_data Json?
+  mfa_challenges               mfa_challenges[]
+  users                        users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([friendly_name, user_id], map: "mfa_factors_user_friendly_name_unique", where: raw("(TRIM(BOTH FROM friendly_name) <> ''::text)"))
+  @@unique([user_id, phone], map: "unique_phone_factor_per_user")
+  @@index([user_id, created_at], map: "factor_id_created_at_idx")
+  @@index([user_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oauth_authorizations {
+  id                    String                     @id @db.Uuid
+  authorization_id      String                     @unique
+  client_id             String                     @db.Uuid
+  user_id               String?                    @db.Uuid
+  redirect_uri          String
+  scope                 String
+  state                 String?
+  resource              String?
+  code_challenge        String?
+  code_challenge_method code_challenge_method?
+  response_type         oauth_response_type        @default(code)
+  status                oauth_authorization_status @default(pending)
+  authorization_code    String?                    @unique
+  created_at            DateTime                   @default(now()) @db.Timestamptz(6)
+  expires_at            DateTime                   @default(dbgenerated("(now() + '00:03:00'::interval)")) @db.Timestamptz(6)
+  approved_at           DateTime?                  @db.Timestamptz(6)
+  nonce                 String?
+  oauth_clients         oauth_clients              @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                 users?                     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at], map: "oauth_auth_pending_exp_idx", where: raw("(status = 'pending'::auth.oauth_authorization_status)"))
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model oauth_client_states {
+  id            String   @id @db.Uuid
+  provider_type String
+  code_verifier String?
+  created_at    DateTime @db.Timestamptz(6)
+
+  @@index([created_at], map: "idx_oauth_client_states_created_at")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oauth_clients {
+  id                         String                  @id @db.Uuid
+  client_secret_hash         String?
+  registration_type          oauth_registration_type
+  redirect_uris              String
+  grant_types                String
+  client_name                String?
+  client_uri                 String?
+  logo_uri                   String?
+  created_at                 DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                 DateTime?               @db.Timestamptz(6)
+  client_type                oauth_client_type       @default(confidential)
+  token_endpoint_auth_method String
+  oauth_authorizations       oauth_authorizations[]
+  oauth_consents             oauth_consents[]
+  sessions                   sessions[]
+
+  @@index([deleted_at])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oauth_consents {
+  id            String        @id @db.Uuid
+  user_id       String        @db.Uuid
+  client_id     String        @db.Uuid
+  scopes        String
+  granted_at    DateTime      @default(now()) @db.Timestamptz(6)
+  revoked_at    DateTime?     @db.Timestamptz(6)
+  oauth_clients oauth_clients @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, client_id], map: "oauth_consents_user_client_unique")
+  @@index([client_id], map: "oauth_consents_active_client_idx", where: raw("(revoked_at IS NULL)"))
+  @@index([user_id, client_id], map: "oauth_consents_active_user_client_idx", where: raw("(revoked_at IS NULL)"))
+  @@index([user_id, granted_at(sort: Desc)], map: "oauth_consents_user_order_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model one_time_tokens {
+  id         String              @id @db.Uuid
+  user_id    String              @db.Uuid
+  token_type one_time_token_type
+  token_hash String
+  relates_to String
+  created_at DateTime            @default(now()) @db.Timestamp(6)
+  updated_at DateTime            @default(now()) @db.Timestamp(6)
+  users      users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, token_type])
+  @@index([relates_to], map: "one_time_tokens_relates_to_hash_idx", type: Hash)
+  @@index([token_hash], map: "one_time_tokens_token_hash_hash_idx", type: Hash)
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model refresh_tokens {
+  instance_id String?   @db.Uuid
+  id          BigInt    @id @default(autoincrement())
+  token       String?   @unique(map: "refresh_tokens_token_unique") @db.VarChar(255)
+  user_id     String?   @db.VarChar(255)
+  revoked     Boolean?
+  created_at  DateTime? @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+  parent      String?   @db.VarChar(255)
+  session_id  String?   @db.Uuid
+  sessions    sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([instance_id])
+  @@index([instance_id, user_id])
+  @@index([parent])
+  @@index([session_id, revoked])
+  @@index([updated_at(sort: Desc)])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model saml_providers {
+  id                String        @id @db.Uuid
+  sso_provider_id   String        @db.Uuid
+  entity_id         String        @unique
+  metadata_xml      String
+  metadata_url      String?
+  attribute_mapping Json?
+  created_at        DateTime?     @db.Timestamptz(6)
+  updated_at        DateTime?     @db.Timestamptz(6)
+  name_id_format    String?
+  sso_providers     sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model saml_relay_states {
+  id              String        @id @db.Uuid
+  sso_provider_id String        @db.Uuid
+  request_id      String
+  for_email       String?
+  redirect_to     String?
+  created_at      DateTime?     @db.Timestamptz(6)
+  updated_at      DateTime?     @db.Timestamptz(6)
+  flow_state_id   String?       @db.Uuid
+  flow_state      flow_state?   @relation(fields: [flow_state_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)])
+  @@index([for_email])
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model schema_migrations {
+  version String @id @db.VarChar(255)
+
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model sessions {
+  id                     String           @id @db.Uuid
+  user_id                String           @db.Uuid
+  created_at             DateTime?        @db.Timestamptz(6)
+  updated_at             DateTime?        @db.Timestamptz(6)
+  factor_id              String?          @db.Uuid
+  aal                    aal_level?
+  not_after              DateTime?        @db.Timestamptz(6)
+  refreshed_at           DateTime?        @db.Timestamp(6)
+  user_agent             String?
+  ip                     String?          @db.Inet
+  tag                    String?
+  oauth_client_id        String?          @db.Uuid
+  refresh_token_hmac_key String?
+  refresh_token_counter  BigInt?
+  scopes                 String?
+  mfa_amr_claims         mfa_amr_claims[]
+  refresh_tokens         refresh_tokens[]
+  oauth_clients          oauth_clients?   @relation(fields: [oauth_client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                  users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([not_after(sort: Desc)])
+  @@index([oauth_client_id])
+  @@index([user_id])
+  @@index([user_id, created_at], map: "user_id_created_at_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model sso_domains {
+  id              String        @id @db.Uuid
+  sso_provider_id String        @db.Uuid
+  domain          String
+  created_at      DateTime?     @db.Timestamptz(6)
+  updated_at      DateTime?     @db.Timestamptz(6)
+  sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model sso_providers {
+  id                String              @id @db.Uuid
+  resource_id       String?
+  created_at        DateTime?           @db.Timestamptz(6)
+  updated_at        DateTime?           @db.Timestamptz(6)
+  disabled          Boolean?
+  saml_providers    saml_providers[]
+  saml_relay_states saml_relay_states[]
+  sso_domains       sso_domains[]
+
+  @@index([resource_id], map: "sso_providers_resource_id_pattern_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model users {
+  instance_id                 String?                @db.Uuid
+  id                          String                 @id @db.Uuid
+  aud                         String?                @db.VarChar(255)
+  role                        String?                @db.VarChar(255)
+  email                       String?                @unique(map: "users_email_partial_key", where: raw("(is_sso_user = false)")) @db.VarChar(255)
+  encrypted_password          String?                @db.VarChar(255)
+  email_confirmed_at          DateTime?              @db.Timestamptz(6)
+  invited_at                  DateTime?              @db.Timestamptz(6)
+  confirmation_token          String?                @unique(map: "confirmation_token_idx", where: raw("((confirmation_token)::text !~ '^[0-9 ]*$'::text)")) @db.VarChar(255)
+  confirmation_sent_at        DateTime?              @db.Timestamptz(6)
+  recovery_token              String?                @unique(map: "recovery_token_idx", where: raw("((recovery_token)::text !~ '^[0-9 ]*$'::text)")) @db.VarChar(255)
+  recovery_sent_at            DateTime?              @db.Timestamptz(6)
+  email_change_token_new      String?                @unique(map: "email_change_token_new_idx", where: raw("((email_change_token_new)::text !~ '^[0-9 ]*$'::text)")) @db.VarChar(255)
+  email_change                String?                @db.VarChar(255)
+  email_change_sent_at        DateTime?              @db.Timestamptz(6)
+  last_sign_in_at             DateTime?              @db.Timestamptz(6)
+  raw_app_meta_data           Json?
+  raw_user_meta_data          Json?
+  is_super_admin              Boolean?
+  created_at                  DateTime?              @db.Timestamptz(6)
+  updated_at                  DateTime?              @db.Timestamptz(6)
+  phone                       String?                @unique
+  phone_confirmed_at          DateTime?              @db.Timestamptz(6)
+  phone_change                String?                @default("")
+  phone_change_token          String?                @default("") @db.VarChar(255)
+  phone_change_sent_at        DateTime?              @db.Timestamptz(6)
+  confirmed_at                DateTime?              @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
+  email_change_token_current  String?                @unique(map: "email_change_token_current_idx", where: raw("((email_change_token_current)::text !~ '^[0-9 ]*$'::text)")) @default("") @db.VarChar(255)
+  email_change_confirm_status Int?                   @default(0) @db.SmallInt
+  banned_until                DateTime?              @db.Timestamptz(6)
+  reauthentication_token      String?                @unique(map: "reauthentication_token_idx", where: raw("((reauthentication_token)::text !~ '^[0-9 ]*$'::text)")) @default("") @db.VarChar(255)
+  reauthentication_sent_at    DateTime?              @db.Timestamptz(6)
+  is_sso_user                 Boolean                @default(false)
+  deleted_at                  DateTime?              @db.Timestamptz(6)
+  is_anonymous                Boolean                @default(false)
+  identities                  identities[]
+  mfa_factors                 mfa_factors[]
+  oauth_authorizations        oauth_authorizations[]
+  oauth_consents              oauth_consents[]
+  one_time_tokens             one_time_tokens[]
+  sessions                    sessions[]
+  webauthn_challenges         webauthn_challenges[]
+  webauthn_credentials        webauthn_credentials[]
+  pg_users                    pg_users?
+
+  @@index([instance_id])
+  @@index([is_anonymous])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model webauthn_challenges {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String?  @db.Uuid
+  challenge_type String
+  session_data   Json
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  expires_at     DateTime @db.Timestamptz(6)
+  users          users?   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at])
+  @@index([user_id])
+  @@schema("auth")
+}
+
+model webauthn_credentials {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String    @db.Uuid
+  credential_id    Bytes     @unique
+  public_key       Bytes
+  attestation_type String    @default("")
+  aaguid           String?   @db.Uuid
+  sign_count       BigInt    @default(0)
+  transports       Json      @default("[]")
+  backup_eligible  Boolean   @default(false)
+  backed_up        Boolean   @default(false)
+  friendly_name    String    @default("")
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+  last_used_at     DateTime? @db.Timestamptz(6)
+  users            users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id])
+  @@schema("auth")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model customer_balance {
+  id                     BigInt                   @id @default(autoincrement())
+  created_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  balance                Decimal                  @default(0) @db.Decimal
+  id_outlet              BigInt?                  @unique(map: "unique_customer")
+  updated_at             DateTime?                @db.Timestamptz(6)
+  deleted_at             DateTime?                @db.Timestamptz(6)
+  pg_outlet              pg_outlet?               @relation(fields: [id_outlet], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer_balance_usage customer_balance_usage[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model customer_balance_usage {
+  id                  BigInt                 @id @default(autoincrement())
+  created_at          DateTime               @default(now()) @db.Timestamptz(6)
+  id_customer_balance BigInt
+  no_faktur           String                 @db.VarChar
+  type                balance_usage_type
+  amount              Decimal                @db.Decimal
+  note                String?
+  author              String                 @db.VarChar
+  category            balance_usage_category
+  no_ref              String?                @db.VarChar
+  balance_before      Decimal                @default(0) @db.Decimal
+  balance_after       Decimal                @default(0) @db.Decimal
+  customer_balance    customer_balance       @relation(fields: [id_customer_balance], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_area {
+  id                 BigInt               @id @default(autoincrement())
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  kode_area          String               @unique
+  nama_area          String               @unique
+  id_formasi         BigInt?              @default(3)
+  pg_formasi         pg_formasi?          @relation(fields: [id_formasi], references: [id])
+  pg_outlet_area     pg_outlet_area[]
+  pg_outlet_area_otc pg_outlet_area_otc[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_config {
+  id          BigInt   @id @default(autoincrement())
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  config_name String   @unique
+  value       String
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_detail_delivery_order {
+  id                       BigInt                    @id @default(autoincrement())
+  id_delivery_order        BigInt?
+  id_produk                BigInt
+  nama_produk              String
+  jumlah_produk            BigInt
+  jenis_satuan             String
+  golongan_produk          String
+  batch                    String
+  exp_date                 String
+  no_faktur                String
+  sumber_gudang            String                    @default("")
+  harga_jual               Decimal                   @default(0) @db.Decimal
+  diskon_1                 Decimal                   @default(0) @db.Decimal
+  diskon_2                 Decimal                   @default(0) @db.Decimal
+  diskon_3                 Decimal                   @default(0) @db.Decimal
+  ppn                      Decimal                   @default(0) @db.Decimal
+  harga_total              Decimal                   @default(0) @db.Decimal
+  hpp_asli                 Decimal                   @default(0) @db.Decimal
+  pg_master_delivery_order pg_master_delivery_order? @relation(fields: [id_delivery_order], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pg_product               pg_product                @relation(fields: [id_produk], references: [id])
+
+  @@index([id_produk], map: "idx_detail_delivery_order_id_produk")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_detail_employees {
+  id                            BigInt       @id
+  created_at                    DateTime     @default(now()) @db.Timestamptz(6)
+  nik_ktp                       String?
+  alamat_ktp                    String?
+  alamat_domisili               String?
+  npwp                          String?
+  tgl_lahir                     DateTime?    @db.Date
+  status_perkawinan             String?
+  pendidikan_terakhir           String?
+  sekolah_terakhir              String?
+  agama                         String?
+  jenis_kelamin                 String?
+  golongan_darah                String?
+  nama_pasangan                 String?
+  no_hp_pasangan                String?
+  nama_anak_ke_1                String?
+  nama_anak_ke_2                String?
+  nama_anak_ke_3                String?
+  nama_ayah                     String?
+  no_hp_ayah                    String?
+  nama_ibu                      String?
+  no_hp_ibu                     String?
+  alamat_orang_tua              String?
+  kontak_referensi              String?
+  hubungan_dgn_kontak_referensi String?
+  jumlah_tanggungan             Decimal?     @db.Decimal
+  no_rekening                   String?
+  take_home_pay                 Decimal?     @db.Decimal
+  id_pof                        BigInt?      @unique
+  no_bpjs_kesehatan             String?
+  no_bpjs_ketenagakerjaan       String?
+  bank_rekening                 String?
+  pg_employees                  pg_employees @relation(fields: [id], references: [id], onDelete: Cascade)
+  pg_pof                        pg_pof?      @relation(fields: [id_pof], references: [id])
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_detail_picklist {
+  id                      BigInt              @id @unique @default(autoincrement())
+  no_faktur               String
+  no_faktur_jual          String
+  outlet_kode_outlet      String
+  outlet_nama_outlet      String
+  outlet_alamat           String
+  area_id                 BigInt
+  area_nama_area          String
+  product_kode_produk     BigInt
+  product_nama_produk     String
+  jumlah_produk           BigInt
+  product_jenis_satuan    String
+  product_golongan_produk String
+  total_tagihan_faktur    BigInt              @default(0)
+  batch                   String?
+  picklist_id             BigInt?
+  nama_user               String?
+  pg_master_picklist      pg_master_picklist? @relation(fields: [picklist_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pg_detail_picklist_master")
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_employees {
+  id                      BigInt               @id @default(autoincrement())
+  created_at              DateTime             @default(now()) @db.Timestamptz(6)
+  nik                     String
+  nama                    String
+  email                   String?
+  telepon                 String?
+  alamat                  String?
+  no_bpjs_kesehatan       String?
+  no_bpjs_ketenagakerjaan String?
+  status                  String
+  id_pekerjaan            BigInt?
+  tgl_bergabung           DateTime?            @db.Timestamptz(6)
+  periode_kontrak         Decimal?             @db.Decimal
+  status_keluar           Boolean              @default(false)
+  photo_path              String?
+  pg_detail_employees     pg_detail_employees?
+  pg_pekerjaan            pg_pekerjaan?        @relation(fields: [id_pekerjaan], references: [id])
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_formasi {
+  id                       BigInt                     @id @default(autoincrement())
+  created_at               DateTime                   @default(now()) @db.Timestamptz(6)
+  nama_formasi             String                     @unique
+  divisi                   String
+  id_atasan                BigInt?
+  id_pof                   BigInt
+  pg_area                  pg_area[]
+  pg_formasi               pg_formasi?                @relation("pg_formasiTopg_formasi", fields: [id_atasan], references: [id])
+  other_pg_formasi         pg_formasi[]               @relation("pg_formasiTopg_formasi")
+  pg_pof                   pg_pof                     @relation(fields: [id_pof], references: [id], onDelete: SetNull)
+  pg_master_delivery_order pg_master_delivery_order[]
+  pg_penawaran             pg_penawaran[]
+  pg_penjualan             pg_penjualan[]
+  pg_penjualan_btj         pg_penjualan_btj[]
+  pg_penjualan_otc         pg_penjualan_otc[]
+  pg_target_collection     pg_target_collection[]
+  pg_target_sales          pg_target_sales[]
+
+  @@index([id_atasan], map: "idx_formasi_atasan")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_golongan {
+  id                 BigInt   @id @default(autoincrement())
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  nama_golongan      String   @unique
+  deskripsi_golongan String?
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_gudang {
+  id          BigInt   @id @default(autoincrement())
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  nama_gudang String   @unique
+  alamat      String?
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_jenis_outlet {
+  id           BigInt   @id @default(autoincrement())
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  kode_outlet  String   @unique
+  jenis_outlet String   @unique
+  keterangan   String?
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_konsinyasi {
+  id                   BigInt     @id(map: "pg_penjualan_konsinyasi_pkey") @default(autoincrement())
+  created_at           DateTime   @default(now()) @db.Timestamptz(6)
+  no_faktur_konsinyasi String
+  gudang_asal          String
+  gudang_tujuan        String
+  id_produk            BigInt
+  batch                String
+  exp_date             String
+  sumber_faktur_beli   String
+  hpp_asli             Decimal    @db.Decimal
+  id_outlet            BigInt
+  author               String
+  catatan              String?
+  nama_user            String?
+  tgl_nota             String
+  ppn                  Decimal    @default(0) @db.Decimal
+  total_harga          Decimal    @db.Decimal
+  jumlah_produk        Decimal    @db.Decimal
+  harga_jual           Decimal    @db.Decimal
+  kali_cetak_faktur    BigInt?    @default(0)
+  pg_outlet            pg_outlet  @relation(fields: [id_outlet], references: [id], map: "pg_penjualan_konsinyasi_id_outlet_fkey")
+  pg_product           pg_product @relation(fields: [id_produk], references: [id], map: "pg_penjualan_konsinyasi_id_produk_fkey")
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_laporan_inkaso {
+  id               BigInt   @id @default(autoincrement())
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  no_faktur_inkaso String   @unique(map: "pg_laporan_inkaso_no_faktur_inkaso_unique") @default("")
+  data_inkaso      Json     @default("[]")
+  nama_penagih     String
+  tgl_inkaso       String
+  author           String?
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_logs {
+  id          BigInt   @id @default(autoincrement())
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  user_email  String?
+  username    String?
+  log_message String?
+  path        String?
+
+  @@index([created_at])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_master_delivery_order {
+  id                       BigInt                     @id(map: "pg_master_do_pkey") @default(autoincrement())
+  created_at               DateTime                   @default(now()) @db.Timestamptz(6)
+  id_pof                   BigInt
+  id_outlet                BigInt
+  author                   String
+  no_faktur                String
+  catatan                  String?
+  tgl_nota                 String
+  tgl_jatuh_tempo          String
+  last_updated             DateTime?                  @default(now()) @db.Timestamptz(6)
+  sumber_gudang            String                     @default("")
+  sumber_faktur_beli       String
+  status_bayar             String                     @default("BELUM DIFAKTURKAN")
+  nama_user                String?
+  id_pengiriman            BigInt?
+  status_pengiriman        String                     @default("BELUM DIKIRIM")
+  id_formasi               BigInt?
+  is_tender                Boolean?
+  total_qty                BigInt                     @default(0)
+  ada_komitmen             Boolean                    @default(false)
+  tgl_komitmen             String?
+  total_tagihan_faktur     BigInt                     @default(0)
+  pg_detail_delivery_order pg_detail_delivery_order[]
+  pg_formasi               pg_formasi?                @relation(fields: [id_formasi], references: [id], map: "pg_master_do_id_formasi_fkey")
+  pg_outlet                pg_outlet                  @relation(fields: [id_outlet], references: [id], map: "pg_master_do_id_outlet_fkey")
+  pg_pof                   pg_pof                     @relation(fields: [id_pof], references: [id], map: "pg_master_do_id_pof_fkey")
+
+  @@index([created_at], map: "idx_master_do_created_at")
+  @@index([id_formasi], map: "idx_master_do_id_formasi")
+  @@index([id_outlet], map: "idx_master_do_id_outlet")
+  @@index([id_pof], map: "idx_master_do_id_pof")
+  @@index([no_faktur], map: "idx_master_do_no_faktur")
+  @@index([tgl_nota], map: "idx_master_do_tgl_nota")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_master_picklist {
+  id                          BigInt                        @id @default(autoincrement())
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  no_faktur                   String                        @unique
+  author                      String
+  spv_logistik                String?
+  admin_logistik              String?
+  driver                      String?
+  picker                      String?
+  checker                     String?
+  pg_detail_picklist          pg_detail_picklist[]
+  pg_picklist_faktur_tracking pg_picklist_faktur_tracking[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_metode_pembayaran {
+  id           BigInt   @id @default(autoincrement())
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  metode_bayar String   @unique
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_mutasi {
+  id                 BigInt     @id @default(autoincrement())
+  created_at         DateTime   @default(now()) @db.Timestamptz(6)
+  no_faktur_mutasi   String
+  gudang_asal        String
+  gudang_tujuan      String
+  id_produk          BigInt
+  batch              String
+  exp_date           String
+  sumber_faktur_beli String
+  hpp_asli           Decimal    @db.Decimal
+  id_outlet          BigInt?
+  author             String
+  catatan            String?
+  nama_user          String?
+  tgl_nota           String
+  ppn                Decimal    @default(0) @db.Decimal
+  total_harga        Decimal    @db.Decimal
+  jumlah_produk      Decimal    @db.Decimal
+  harga_jual         Decimal    @db.Decimal
+  kali_cetak_faktur  Decimal?   @default(0) @db.Decimal
+  pg_outlet          pg_outlet? @relation(fields: [id_outlet], references: [id], onDelete: Restrict)
+  pg_product         pg_product @relation(fields: [id_produk], references: [id])
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_outlet {
+  id                          BigInt                        @id @default(autoincrement())
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  nama_outlet                 String
+  jenis_outlet                String
+  alamat                      String
+  kota                        String
+  telepon                     String?
+  no_npwp                     String?
+  tempo                       Decimal?                      @db.Decimal
+  kode_outlet                 String                        @unique
+  is_panel                    Boolean?
+  no_sipnap                   String?
+  no_izin_sia_siop            String?
+  masa_berlaku_sia_siop       DateTime?                     @db.Date
+  nama_apj                    String?
+  no_sipa_apj                 String?
+  masa_berlaku_sipa           DateTime?                     @db.Date
+  customer_balance            customer_balance?
+  pg_konsinyasi               pg_konsinyasi[]
+  pg_master_delivery_order    pg_master_delivery_order[]
+  pg_mutasi                   pg_mutasi[]
+  pg_outlet_area              pg_outlet_area?
+  pg_outlet_area_otc          pg_outlet_area_otc?
+  pg_pembayaran_penjualan     pg_pembayaran_penjualan[]
+  pg_pembayaran_penjualan_btj pg_pembayaran_penjualan_btj[]
+  pg_pembayaran_penjualan_otc pg_pembayaran_penjualan_otc[]
+  pg_penawaran                pg_penawaran[]
+  pg_pengiriman               pg_pengiriman[]
+  pg_penjualan                pg_penjualan[]
+  pg_penjualan_btj            pg_penjualan_btj[]
+  pg_penjualan_old            pg_penjualan_old[]
+  pg_penjualan_otc            pg_penjualan_otc[]
+  pg_penjualan_sample         pg_penjualan_sample[]
+  pg_penjualan_temp           pg_penjualan_temp[]
+  pg_penjualan_temp_lunas2021 pg_penjualan_temp_lunas2021[]
+  pg_penjualan_temp_otc       pg_penjualan_temp_otc[]
+  pg_retur_jual               pg_retur_jual[]
+  pg_tt_keuangan              pg_tt_keuangan[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_outlet_area {
+  id         BigInt     @id @default(autoincrement())
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  id_outlet  BigInt?    @unique
+  id_area    BigInt?    @default(66)
+  pg_area    pg_area?   @relation(fields: [id_area], references: [id], onDelete: SetDefault)
+  pg_outlet  pg_outlet? @relation(fields: [id_outlet], references: [id], onDelete: Cascade)
+
+  @@index([id_outlet, id_area], map: "idx_outlet_area_link")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_outlet_area_otc {
+  id         BigInt     @id @default(autoincrement())
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  id_outlet  BigInt?    @unique
+  id_area    BigInt?    @default(66)
+  pg_area    pg_area?   @relation(fields: [id_area], references: [id], onDelete: SetDefault)
+  pg_outlet  pg_outlet? @relation(fields: [id_outlet], references: [id], onDelete: Cascade)
+
+  @@index([id_outlet, id_area], map: "idx_outlet_area_otc_link")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pekerjaan {
+  id             BigInt         @id @default(autoincrement())
+  created_at     DateTime       @default(now()) @db.Timestamptz(6)
+  nama_pekerjaan String         @unique
+  kode_pekerjaan String?
+  pg_employees   pg_employees[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pembayaran_pembelian {
+  id                   BigInt      @id @default(autoincrement())
+  created_at           DateTime    @default(now()) @db.Timestamptz(6)
+  no_faktur            String
+  id_supplier          BigInt
+  no_faktur_pembelian  String
+  tagihan_terbayar     Decimal     @default(0) @db.Decimal
+  tgl_nota             String
+  tgl_jatuh_tempo      String
+  tgl_bayar            String
+  author               String
+  last_updated         DateTime    @default(now()) @db.Timestamptz(6)
+  catatan              String?
+  total_tagihan_faktur Decimal     @db.Decimal
+  metode_pembayaran    String
+  nama_user            String?
+  biaya_admin          Decimal     @default(0) @db.Decimal
+  biaya_materai        Decimal     @default(0) @db.Decimal
+  sisa_tagihan         Decimal     @default(0) @db.Decimal
+  no_faktur_supplier   String?
+  penyesuaian_harga    Decimal     @default(0) @db.Decimal
+  pg_supplier          pg_supplier @relation(fields: [id_supplier], references: [id])
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pembayaran_penjualan {
+  id                      BigInt     @id @default(autoincrement())
+  created_at              DateTime   @default(now()) @db.Timestamptz(6)
+  no_faktur               String
+  id_outlet               BigInt
+  id_penagih              BigInt
+  no_faktur_penjualan     String
+  tagihan_terbayar        Decimal    @default(0) @db.Decimal
+  tgl_nota                String
+  tgl_jatuh_tempo         String
+  tgl_bayar               String
+  author                  String
+  last_updated            DateTime   @default(now()) @db.Timestamptz(6)
+  catatan                 String?
+  total_tagihan_faktur    Decimal    @db.Decimal
+  metode_pembayaran       String
+  nama_user               String?
+  kode_pof                String?
+  biaya_admin             Decimal    @default(0) @db.Decimal
+  biaya_materai           Decimal    @default(0) @db.Decimal
+  potongan_harga          Decimal    @default(0) @db.Decimal
+  sisa_tagihan            Decimal    @default(0) @db.Decimal
+  detail_tagihan_terbayar Json?
+  pg_outlet               pg_outlet  @relation(fields: [id_outlet], references: [id])
+  pg_penagih              pg_penagih @relation(fields: [id_penagih], references: [id])
+
+  @@index([created_at], map: "idx_pembayaran_created_at")
+  @@index([id_outlet], map: "idx_pembayaran_id_outlet")
+  @@index([no_faktur_penjualan], map: "idx_pembayaran_no_faktur_penjualan")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pembayaran_penjualan_btj {
+  id                      BigInt     @id @default(autoincrement())
+  created_at              DateTime   @default(now()) @db.Timestamptz(6)
+  no_faktur               String
+  id_outlet               BigInt
+  id_penagih              BigInt
+  no_faktur_penjualan     String
+  tagihan_terbayar        Decimal    @default(0) @db.Decimal
+  tgl_nota                String
+  tgl_jatuh_tempo         String
+  tgl_bayar               String
+  author                  String
+  last_updated            DateTime   @default(now()) @db.Timestamptz(6)
+  catatan                 String?
+  total_tagihan_faktur    Decimal    @db.Decimal
+  metode_pembayaran       String
+  nama_user               String?
+  kode_pof                String?
+  biaya_admin             Decimal    @default(0) @db.Decimal
+  biaya_materai           Decimal    @default(0) @db.Decimal
+  potongan_harga          Decimal    @default(0) @db.Decimal
+  sisa_tagihan            Decimal    @default(0) @db.Decimal
+  detail_tagihan_terbayar Json?
+  pg_outlet               pg_outlet  @relation(fields: [id_outlet], references: [id])
+  pg_penagih              pg_penagih @relation(fields: [id_penagih], references: [id])
+
+  @@index([created_at], map: "idx_pembayaran_btj_created_at")
+  @@index([id_outlet], map: "idx_pembayaran_btj_id_outlet")
+  @@index([no_faktur_penjualan], map: "idx_pembayaran_btj_no_faktur_penjualan")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pembayaran_penjualan_otc {
+  id                      BigInt     @id @default(autoincrement())
+  created_at              DateTime   @default(now()) @db.Timestamptz(6)
+  no_faktur               String
+  id_outlet               BigInt
+  id_penagih              BigInt
+  no_faktur_penjualan     String
+  tagihan_terbayar        Decimal    @default(0) @db.Decimal
+  tgl_nota                String
+  tgl_jatuh_tempo         String
+  tgl_bayar               String
+  author                  String
+  last_updated            DateTime   @default(now()) @db.Timestamptz(6)
+  catatan                 String?
+  total_tagihan_faktur    Decimal    @db.Decimal
+  metode_pembayaran       String
+  nama_user               String?
+  kode_pof                String?
+  biaya_admin             Decimal    @default(0) @db.Decimal
+  biaya_materai           Decimal    @default(0) @db.Decimal
+  potongan_harga          Decimal    @default(0) @db.Decimal
+  sisa_tagihan            Decimal    @default(0) @db.Decimal
+  detail_tagihan_terbayar Json?
+  pg_outlet               pg_outlet  @relation(fields: [id_outlet], references: [id])
+  pg_penagih              pg_penagih @relation(fields: [id_penagih], references: [id])
+
+  @@index([created_at], map: "idx_pembayaran_otc_created_at")
+  @@index([id_outlet], map: "idx_pembayaran_otc_id_outlet")
+  @@index([no_faktur_penjualan], map: "idx_pembayaran_otc_no_faktur_penjualan")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pembelian {
+  id                      BigInt       @id @default(autoincrement())
+  created_at              DateTime     @default(now()) @db.Timestamptz(6)
+  no_faktur               String
+  no_faktur_supplier      String
+  tgl_nota                DateTime     @db.Date
+  tgl_jatuh_tempo         DateTime     @db.Date
+  batch                   String
+  exp_date                String
+  jumlah_produk           Decimal      @db.Decimal
+  harga_produk            Decimal      @db.Decimal
+  diskon_1                Decimal      @default(0) @db.Decimal
+  diskon_2                Decimal      @default(0) @db.Decimal
+  diskon_3                Decimal      @default(0) @db.Decimal
+  ppn                     Decimal      @db.Decimal
+  harga_total             Decimal      @db.Decimal
+  author                  String
+  lokasi_gudang           String
+  catatan                 String?
+  hpp                     Decimal?     @db.Decimal
+  harga_total_ppn         Decimal      @db.Decimal
+  id_supplier             BigInt?
+  id_produk               BigInt?
+  status_bayar            String       @default("BELUM LUNAS")
+  last_updated            DateTime     @default(dbgenerated("(now() AT TIME ZONE 'gmt'::text)")) @db.Timestamptz(6)
+  tgl_update_status_bayar DateTime?    @db.Timestamptz(6)
+  divisi                  String       @default("")
+  total_tagihan_faktur    Decimal?     @db.Decimal
+  id_histori_pembayaran   Json         @default("[]")
+  total_tagihan_terbayar  Decimal      @default(0) @db.Decimal
+  sisa_tagihan            Decimal      @default(0) @db.Decimal
+  kali_cetak_faktur       BigInt?      @default(0)
+  pg_product              pg_product?  @relation(fields: [id_produk], references: [id], onDelete: Restrict)
+  pg_supplier             pg_supplier? @relation(fields: [id_supplier], references: [id], onDelete: Restrict)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pembelian_konsinyasi {
+  id                      BigInt       @id @default(autoincrement())
+  created_at              DateTime     @default(now()) @db.Timestamptz(6)
+  no_faktur               String
+  no_faktur_supplier      String
+  tgl_nota                DateTime     @db.Date
+  tgl_jatuh_tempo         DateTime?    @db.Date
+  batch                   String
+  exp_date                String
+  jumlah_produk           Decimal      @db.Decimal
+  harga_produk            Decimal      @db.Decimal
+  diskon_1                Decimal      @default(0) @db.Decimal
+  diskon_2                Decimal      @default(0) @db.Decimal
+  diskon_3                Decimal      @default(0) @db.Decimal
+  ppn                     Decimal      @db.Decimal
+  harga_total             Decimal      @db.Decimal
+  author                  String
+  lokasi_gudang           String
+  catatan                 String?
+  hpp                     Decimal?     @db.Decimal
+  harga_total_ppn         Decimal      @db.Decimal
+  id_supplier             BigInt?
+  id_produk               BigInt?
+  status_bayar            String       @default("BELUM LUNAS")
+  last_updated            DateTime     @default(dbgenerated("(now() AT TIME ZONE 'gmt'::text)")) @db.Timestamptz(6)
+  tgl_update_status_bayar DateTime?    @db.Timestamptz(6)
+  divisi                  String       @default("")
+  total_tagihan_faktur    Decimal?     @db.Decimal
+  id_histori_pembayaran   Json         @default("[]")
+  total_tagihan_terbayar  Decimal      @default(0) @db.Decimal
+  sisa_tagihan            Decimal      @default(0) @db.Decimal
+  kali_cetak_faktur       BigInt?      @default(0)
+  pg_product              pg_product?  @relation(fields: [id_produk], references: [id], onDelete: Restrict)
+  pg_supplier             pg_supplier? @relation(fields: [id_supplier], references: [id], onDelete: Restrict)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penagih {
+  id                          BigInt                        @id @default(autoincrement())
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  kode_penagih                String                        @unique
+  nama_penagih                String                        @unique
+  alamat                      String?
+  keterangan                  String?
+  telepon                     String?
+  is_active                   Boolean?                      @default(true)
+  pg_pembayaran_penjualan     pg_pembayaran_penjualan[]
+  pg_pembayaran_penjualan_btj pg_pembayaran_penjualan_btj[]
+  pg_pembayaran_penjualan_otc pg_pembayaran_penjualan_otc[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penawaran {
+  id                     BigInt      @id @default(autoincrement())
+  created_at             DateTime    @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt
+  jumlah_produk          Decimal     @db.Decimal
+  id_pof                 BigInt
+  id_outlet              BigInt
+  author                 String
+  no_faktur              String
+  catatan                String?
+  tgl_nota               String
+  diskon_on              Decimal     @default(0) @db.Decimal
+  diskon_off             Decimal     @default(0) @db.Decimal
+  last_updated           DateTime?   @default(now()) @db.Timestamptz(6)
+  nama_user              String?
+  id_formasi             BigInt?
+  pagu                   Decimal     @default(0) @db.Decimal
+  harga_penawaran        Decimal     @default(0) @db.Decimal
+  harga_penawaran_outlet Decimal     @default(0) @db.Decimal
+  approval_admin         String      @default("'PENDING'::character varying") @db.VarChar
+  approval_outlet        String      @default("'PENDING'::character varying") @db.VarChar
+  pg_formasi             pg_formasi? @relation(fields: [id_formasi], references: [id])
+  pg_outlet              pg_outlet   @relation(fields: [id_outlet], references: [id])
+  pg_pof                 pg_pof      @relation(fields: [id_pof], references: [id])
+  pg_product             pg_product  @relation(fields: [id_produk], references: [id])
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penawaran_images {
+  id          BigInt    @id @default(autoincrement())
+  no_faktur   String
+  image_url   String
+  image_path  String
+  uploaded_at DateTime? @default(now()) @db.Timestamptz(6)
+  uploaded_by String?
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pengirim {
+  id          BigInt   @id @default(autoincrement())
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  nama_vendor String   @unique
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pengiriman {
+  id                  BigInt    @id @default(autoincrement())
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  no_faktur           String    @default("")
+  id_pof              BigInt
+  id_outlet           BigInt
+  nominal_faktur      Decimal   @db.Decimal
+  nama_pengirim       String
+  tgl_dikirim         DateTime  @db.Date
+  author              String
+  nama_kurir          String
+  no_resi             String?
+  catatan             String?
+  status              String
+  tgl_nota            DateTime  @db.Date
+  tgl_jatuh_tempo     DateTime  @db.Date
+  divisi              String    @default("ETHICAL")
+  no_faktur_penjualan String    @unique
+  pg_outlet           pg_outlet @relation(fields: [id_outlet], references: [id])
+  pg_pof              pg_pof    @relation(fields: [id_pof], references: [id])
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penjualan {
+  id                     BigInt      @id @default(autoincrement())
+  created_at             DateTime    @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt
+  hpp_asli               Decimal     @db.Decimal
+  harga_jual             Decimal     @db.Decimal
+  margin_profit          Decimal     @db.Decimal
+  ppn                    Decimal     @db.Decimal
+  jumlah_produk          Decimal     @db.Decimal
+  harga_total            Decimal     @db.Decimal
+  harga_total_ppn        Decimal     @db.Decimal
+  batch                  String
+  exp_date               String
+  id_pof                 BigInt
+  id_outlet              BigInt
+  author                 String
+  no_faktur              String
+  catatan                String?
+  total_profit           Decimal     @db.Decimal
+  tgl_nota               String
+  tgl_jatuh_tempo        String
+  diskon_1               Decimal     @default(0) @db.Decimal
+  diskon_2               Decimal     @default(0) @db.Decimal
+  diskon_3               Decimal     @default(0) @db.Decimal
+  last_updated           DateTime?   @default(now()) @db.Timestamptz(6)
+  sumber_gudang          String      @default("")
+  kali_cetak_faktur      Int?        @default(0)
+  sumber_faktur_beli     String
+  total_tagihan_faktur   Decimal     @db.Decimal
+  id_histori_pembayaran  Json        @default("[]")
+  status_bayar           String      @default("BELUM LUNAS")
+  sisa_tagihan           Decimal     @db.Decimal
+  total_tagihan_terbayar Decimal     @default(0) @db.Decimal
+  nama_user              String?
+  id_pengiriman          BigInt?
+  status_pengiriman      String      @default("BELUM DIKIRIM")
+  id_formasi             BigInt?
+  is_tender              Boolean?
+  pg_formasi             pg_formasi? @relation(fields: [id_formasi], references: [id])
+  pg_outlet              pg_outlet   @relation(fields: [id_outlet], references: [id])
+  pg_pof                 pg_pof      @relation(fields: [id_pof], references: [id])
+  pg_product             pg_product  @relation(fields: [id_produk], references: [id])
+
+  @@index([created_at], map: "idx_penjualan_created_at")
+  @@index([id_formasi], map: "idx_penjualan_id_formasi")
+  @@index([id_outlet], map: "idx_penjualan_id_outlet")
+  @@index([id_pof], map: "idx_penjualan_id_pof")
+  @@index([id_produk], map: "idx_penjualan_id_produk")
+  @@index([no_faktur], map: "idx_penjualan_no_faktur")
+  @@index([tgl_nota], map: "idx_penjualan_tgl_nota")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penjualan_btj {
+  id                     BigInt      @id @default(autoincrement())
+  created_at             DateTime    @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt
+  hpp_asli               Decimal     @db.Decimal
+  harga_jual             Decimal     @db.Decimal
+  margin_profit          Decimal     @db.Decimal
+  ppn                    Decimal     @db.Decimal
+  jumlah_produk          Decimal     @db.Decimal
+  harga_total            Decimal     @db.Decimal
+  harga_total_ppn        Decimal     @db.Decimal
+  batch                  String
+  exp_date               String
+  id_pof                 BigInt
+  id_outlet              BigInt
+  author                 String
+  no_faktur              String
+  catatan                String?
+  total_profit           Decimal     @db.Decimal
+  tgl_nota               String
+  tgl_jatuh_tempo        String
+  diskon_1               Decimal     @default(0) @db.Decimal
+  diskon_2               Decimal     @default(0) @db.Decimal
+  diskon_3               Decimal     @default(0) @db.Decimal
+  last_updated           DateTime?   @default(now()) @db.Timestamptz(6)
+  sumber_gudang          String      @default("")
+  kali_cetak_faktur      Int?        @default(0)
+  sumber_faktur_beli     String
+  total_tagihan_faktur   Decimal     @db.Decimal
+  id_histori_pembayaran  Json        @default("[]")
+  status_bayar           String      @default("BELUM LUNAS")
+  sisa_tagihan           Decimal     @db.Decimal
+  total_tagihan_terbayar Decimal     @default(0) @db.Decimal
+  nama_user              String?
+  id_pengiriman          BigInt?
+  status_pengiriman      String      @default("BELUM DIKIRIM")
+  id_formasi             BigInt?
+  is_tender              Boolean?
+  pg_formasi             pg_formasi? @relation(fields: [id_formasi], references: [id])
+  pg_outlet              pg_outlet   @relation(fields: [id_outlet], references: [id])
+  pg_pof                 pg_pof      @relation(fields: [id_pof], references: [id])
+  pg_product             pg_product  @relation(fields: [id_produk], references: [id])
+
+  @@index([created_at], map: "idx_penjualan_btj_created_at")
+  @@index([id_formasi], map: "idx_penjualan_btj_id_formasi")
+  @@index([id_outlet], map: "idx_penjualan_btj_id_outlet")
+  @@index([id_pof], map: "idx_penjualan_btj_id_pof")
+  @@index([id_produk], map: "idx_penjualan_btj_id_produk")
+  @@index([no_faktur], map: "idx_penjualan_btj_no_faktur")
+  @@index([tgl_nota], map: "idx_penjualan_btj_tgl_nota")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penjualan_old {
+  id                     BigInt     @id @default(autoincrement())
+  created_at             DateTime   @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt
+  hpp_asli               Decimal    @db.Decimal
+  harga_jual             Decimal    @db.Decimal
+  margin_profit          Decimal    @db.Decimal
+  ppn                    Decimal    @db.Decimal
+  jumlah_produk          Decimal    @db.Decimal
+  harga_total            Decimal    @db.Decimal
+  harga_total_ppn        Decimal    @db.Decimal
+  batch                  String
+  exp_date               String
+  id_pof                 BigInt
+  id_outlet              BigInt
+  author                 String     @default("'MANUAL'::text")
+  no_faktur              String
+  catatan                String?
+  total_profit           Decimal    @db.Decimal
+  tgl_nota               String
+  tgl_jatuh_tempo        String
+  diskon_1               Decimal    @default(0) @db.Decimal
+  diskon_2               Decimal    @default(0) @db.Decimal
+  diskon_3               Decimal    @default(0) @db.Decimal
+  last_updated           DateTime?  @default(now()) @db.Timestamptz(6)
+  sumber_gudang          String     @default("")
+  kali_cetak_faktur      Int?       @default(0)
+  sumber_faktur_beli     String     @default("INPUT_MANUAL")
+  total_tagihan_faktur   Decimal    @db.Decimal
+  id_histori_pembayaran  Json       @default("[]")
+  status_bayar           String     @default("BELUM LUNAS")
+  sisa_tagihan           Decimal    @default(0) @db.Decimal
+  total_tagihan_terbayar Decimal    @default(0) @db.Decimal
+  nama_user              String?
+  id_pengiriman          BigInt?
+  status_pengiriman      String     @default("BELUM DIKIRIM")
+  divisi                 String     @default("ETHICAL")
+  pg_outlet              pg_outlet  @relation(fields: [id_outlet], references: [id])
+  pg_pof                 pg_pof     @relation(fields: [id_pof], references: [id])
+  pg_product             pg_product @relation(fields: [id_produk], references: [id])
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penjualan_otc {
+  id                     BigInt      @id @default(autoincrement())
+  created_at             DateTime    @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt
+  hpp_asli               Decimal     @db.Decimal
+  harga_jual             Decimal     @db.Decimal
+  margin_profit          Decimal     @db.Decimal
+  ppn                    Decimal     @db.Decimal
+  jumlah_produk          Decimal     @db.Decimal
+  harga_total            Decimal     @db.Decimal
+  harga_total_ppn        Decimal     @db.Decimal
+  batch                  String
+  exp_date               String
+  id_pof                 BigInt
+  id_outlet              BigInt
+  author                 String
+  no_faktur              String
+  catatan                String?
+  total_profit           Decimal     @db.Decimal
+  tgl_nota               String
+  tgl_jatuh_tempo        String
+  diskon_1               Decimal     @default(0) @db.Decimal
+  diskon_2               Decimal     @default(0) @db.Decimal
+  diskon_3               Decimal     @default(0) @db.Decimal
+  last_updated           DateTime?   @default(now()) @db.Timestamptz(6)
+  sumber_gudang          String      @default("")
+  kali_cetak_faktur      Int?        @default(0)
+  sumber_faktur_beli     String
+  total_tagihan_faktur   Decimal     @db.Decimal
+  id_histori_pembayaran  Json        @default("[]")
+  status_bayar           String      @default("BELUM LUNAS")
+  sisa_tagihan           Decimal     @db.Decimal
+  total_tagihan_terbayar Decimal     @default(0) @db.Decimal
+  nama_user              String?
+  id_pengiriman          BigInt?
+  status_pengiriman      String      @default("BELUM DIKIRIM")
+  id_formasi             BigInt?
+  is_tender              Boolean?
+  pg_formasi             pg_formasi? @relation(fields: [id_formasi], references: [id])
+  pg_outlet              pg_outlet   @relation(fields: [id_outlet], references: [id])
+  pg_pof                 pg_pof      @relation(fields: [id_pof], references: [id])
+  pg_product             pg_product  @relation(fields: [id_produk], references: [id])
+
+  @@index([created_at], map: "idx_penjualan_otc_created_at")
+  @@index([id_formasi], map: "idx_penjualan_otc_id_formasi")
+  @@index([id_outlet], map: "idx_penjualan_otc_id_outlet")
+  @@index([id_pof], map: "idx_penjualan_otc_id_pof")
+  @@index([id_produk], map: "idx_penjualan_otc_id_produk")
+  @@index([no_faktur], map: "idx_penjualan_otc_no_faktur")
+  @@index([tgl_nota], map: "idx_penjualan_otc_tgl_nota")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penjualan_sample {
+  id                     BigInt     @id @default(autoincrement())
+  created_at             DateTime   @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt
+  hpp_asli               Decimal    @db.Decimal
+  harga_jual             Decimal    @db.Decimal
+  margin_profit          Decimal    @db.Decimal
+  ppn                    Decimal    @db.Decimal
+  jumlah_produk          Decimal    @db.Decimal
+  harga_total            Decimal    @db.Decimal
+  harga_total_ppn        Decimal    @db.Decimal
+  batch                  String
+  exp_date               String
+  id_pof                 BigInt
+  id_outlet              BigInt
+  author                 String
+  no_faktur              String
+  catatan                String?
+  total_profit           Decimal    @db.Decimal
+  tgl_nota               String
+  tgl_jatuh_tempo        String
+  diskon_1               Decimal    @default(0) @db.Decimal
+  diskon_2               Decimal    @default(0) @db.Decimal
+  diskon_3               Decimal    @default(0) @db.Decimal
+  last_updated           DateTime?  @default(now()) @db.Timestamptz(6)
+  sumber_gudang          String     @default("")
+  kali_cetak_faktur      Int?       @default(0)
+  sumber_faktur_beli     String
+  total_tagihan_faktur   Decimal    @db.Decimal
+  id_histori_pembayaran  Json       @default("[]")
+  status_bayar           String     @default("BELUM LUNAS")
+  sisa_tagihan           Decimal    @db.Decimal
+  total_tagihan_terbayar Decimal    @default(0) @db.Decimal
+  nama_user              String?
+  id_pengiriman          BigInt?
+  status_pengiriman      String     @default("BELUM DIKIRIM")
+  pg_outlet              pg_outlet  @relation(fields: [id_outlet], references: [id])
+  pg_pof                 pg_pof     @relation(fields: [id_pof], references: [id])
+  pg_product             pg_product @relation(fields: [id_produk], references: [id])
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penjualan_temp {
+  id                     BigInt     @id @default(autoincrement())
+  created_at             DateTime   @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt
+  hpp_asli               Decimal    @db.Decimal
+  harga_jual             Decimal    @db.Decimal
+  margin_profit          Decimal    @db.Decimal
+  ppn                    Decimal    @db.Decimal
+  jumlah_produk          Decimal    @db.Decimal
+  harga_total            Decimal    @db.Decimal
+  harga_total_ppn        Decimal    @db.Decimal
+  batch                  String
+  exp_date               String
+  id_pof                 BigInt?
+  id_outlet              BigInt?
+  author                 String
+  no_faktur              String
+  catatan                String?
+  total_profit           Decimal    @db.Decimal
+  tgl_nota               String
+  tgl_jatuh_tempo        String
+  diskon_1               Decimal    @default(0) @db.Decimal
+  diskon_2               Decimal    @default(0) @db.Decimal
+  diskon_3               Decimal    @default(0) @db.Decimal
+  last_updated           DateTime?  @default(now()) @db.Timestamptz(6)
+  sumber_gudang          String     @default("")
+  kali_cetak_faktur      Int?       @default(0)
+  sumber_faktur_beli     String
+  total_tagihan_faktur   Decimal    @default(0) @db.Decimal
+  id_histori_pembayaran  Json       @default("[]")
+  status_bayar           String     @default("BELUM LUNAS")
+  sisa_tagihan           Decimal    @db.Decimal
+  total_tagihan_terbayar Decimal    @default(0) @db.Decimal
+  nama_user              String?
+  id_pengiriman          BigInt?
+  status_pengiriman      String     @default("BELUM DIKIRIM")
+  divisi                 String?
+  nama_outlet            String?    @default("200") @db.VarChar
+  pg_outlet              pg_outlet? @relation(fields: [id_outlet], references: [id], onDelete: Restrict)
+  pg_pof                 pg_pof?    @relation(fields: [id_pof], references: [id], onDelete: Restrict)
+  pg_product             pg_product @relation(fields: [id_produk], references: [id])
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penjualan_temp_lunas2021 {
+  id                     BigInt      @id(map: "pg_penjualan_temp_lunas_pkey") @default(autoincrement())
+  created_at             DateTime    @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt?
+  hpp_asli               Decimal     @db.Decimal
+  harga_jual             Decimal     @db.Decimal
+  margin_profit          Decimal     @db.Decimal
+  ppn                    Decimal     @db.Decimal
+  jumlah_produk          Decimal     @db.Decimal
+  harga_total            Decimal     @db.Decimal
+  harga_total_ppn        Decimal     @db.Decimal
+  batch                  String?
+  exp_date               String?
+  id_pof                 BigInt?
+  id_outlet              BigInt?
+  author                 String
+  no_faktur              String
+  catatan                String?
+  total_profit           Decimal     @db.Decimal
+  tgl_nota               String
+  tgl_jatuh_tempo        String
+  diskon_1               Decimal     @default(0) @db.Decimal
+  diskon_2               Decimal     @default(0) @db.Decimal
+  diskon_3               Decimal     @default(0) @db.Decimal
+  last_updated           DateTime?   @default(now()) @db.Timestamptz(6)
+  sumber_gudang          String      @default("")
+  kali_cetak_faktur      Int?        @default(0)
+  sumber_faktur_beli     String
+  total_tagihan_faktur   Decimal     @default(0) @db.Decimal
+  id_histori_pembayaran  Json        @default("[]")
+  status_bayar           String      @default("BELUM LUNAS")
+  sisa_tagihan           Decimal     @db.Decimal
+  total_tagihan_terbayar Decimal     @default(0) @db.Decimal
+  nama_user              String?
+  id_pengiriman          BigInt?
+  status_pengiriman      String      @default("BELUM DIKIRIM")
+  nama_brg               String      @default("200") @db.VarChar
+  nama_sales             String?     @default("100") @db.VarChar
+  nama_outlet            String?     @default("200") @db.VarChar
+  divisi                 String?     @default("100") @db.VarChar
+  pg_outlet              pg_outlet?  @relation(fields: [id_outlet], references: [id], onDelete: Restrict, map: "pg_penjualan_temp_lunas_id_outlet_fkey")
+  pg_pof                 pg_pof?     @relation(fields: [id_pof], references: [id], onDelete: Restrict, map: "pg_penjualan_temp_lunas_id_pof_fkey")
+  pg_product             pg_product? @relation(fields: [id_produk], references: [id], onDelete: Restrict, map: "pg_penjualan_temp_lunas_id_produk_fkey")
+
+  @@schema("public")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penjualan_temp_lunas2224 {
+  id                     BigInt    @default(autoincrement())
+  created_at             DateTime  @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt?
+  hpp_asli               Decimal   @db.Decimal
+  harga_jual             Decimal   @db.Decimal
+  margin_profit          Decimal   @db.Decimal
+  ppn                    Decimal   @db.Decimal
+  jumlah_produk          Decimal   @db.Decimal
+  harga_total            Decimal   @db.Decimal
+  harga_total_ppn        Decimal   @db.Decimal
+  batch                  String?
+  exp_date               String?
+  id_pof                 BigInt?
+  id_outlet              BigInt?
+  author                 String
+  no_faktur              String
+  catatan                String?
+  total_profit           Decimal   @db.Decimal
+  tgl_nota               String
+  tgl_jatuh_tempo        String
+  diskon_1               Decimal   @default(0) @db.Decimal
+  diskon_2               Decimal   @default(0) @db.Decimal
+  diskon_3               Decimal   @default(0) @db.Decimal
+  last_updated           DateTime? @default(now()) @db.Timestamptz(6)
+  sumber_gudang          String    @default("")
+  kali_cetak_faktur      Int?      @default(0)
+  sumber_faktur_beli     String
+  total_tagihan_faktur   Decimal   @default(0) @db.Decimal
+  id_histori_pembayaran  Json      @default("[]")
+  status_bayar           String    @default("BELUM LUNAS")
+  sisa_tagihan           Decimal   @db.Decimal
+  total_tagihan_terbayar Decimal   @default(0) @db.Decimal
+  nama_user              String?
+  id_pengiriman          BigInt?
+  status_pengiriman      String    @default("BELUM DIKIRIM")
+  nama_brg               String    @default("200") @db.VarChar
+  nama_sales             String?   @default("100") @db.VarChar
+  nama_outlet            String?   @default("200") @db.VarChar
+  divisi                 String?   @default("100") @db.VarChar
+
+  @@ignore
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_penjualan_temp_otc {
+  id                     BigInt     @id @default(autoincrement())
+  created_at             DateTime   @default(now()) @db.Timestamptz(6)
+  id_produk              BigInt
+  hpp_asli               Decimal    @db.Decimal
+  harga_jual             Decimal    @db.Decimal
+  margin_profit          Decimal    @db.Decimal
+  ppn                    Decimal    @db.Decimal
+  jumlah_produk          Decimal    @db.Decimal
+  harga_total            Decimal    @db.Decimal
+  harga_total_ppn        Decimal    @db.Decimal
+  batch                  String
+  exp_date               String
+  id_pof                 BigInt
+  id_outlet              BigInt
+  author                 String
+  no_faktur              String
+  catatan                String?
+  total_profit           Decimal    @default(0) @db.Decimal
+  tgl_nota               String
+  tgl_jatuh_tempo        String
+  diskon_1               Decimal    @default(0) @db.Decimal
+  diskon_2               Decimal    @default(0) @db.Decimal
+  diskon_3               Decimal    @default(0) @db.Decimal
+  last_updated           DateTime?  @default(now()) @db.Timestamptz(6)
+  sumber_gudang          String     @default("")
+  kali_cetak_faktur      Int?       @default(0)
+  sumber_faktur_beli     String
+  total_tagihan_faktur   Decimal    @default(0) @db.Decimal
+  id_histori_pembayaran  Json       @default("[]")
+  status_bayar           String     @default("BELUM LUNAS")
+  sisa_tagihan           Decimal    @db.Decimal
+  total_tagihan_terbayar Decimal    @default(0) @db.Decimal
+  nama_user              String?
+  id_pengiriman          BigInt?
+  status_pengiriman      String     @default("BELUM DIKIRIM")
+  pg_outlet              pg_outlet  @relation(fields: [id_outlet], references: [id])
+  pg_pof                 pg_pof     @relation(fields: [id_pof], references: [id])
+  pg_product             pg_product @relation(fields: [id_produk], references: [id])
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_picklist_faktur_tracking {
+  id                 BigInt             @id @default(autoincrement())
+  no_faktur_jual     String             @unique(map: "unique_no_faktur_jual")
+  sumber             String
+  picklist_id        BigInt
+  created_at         DateTime?          @default(now()) @db.Timestamp(6)
+  tgl_nota           DateTime?          @db.Date
+  pg_master_picklist pg_master_picklist @relation(fields: [picklist_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_pof {
+  id                          BigInt                        @id @default(autoincrement())
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  nama_pof                    String
+  alamat_pof                  String?
+  no_telepon                  String?
+  wilayah                     String?
+  kode_pof                    String                        @unique
+  area                        String?
+  is_active                   Boolean?                      @default(true)
+  pg_detail_employees         pg_detail_employees?
+  pg_formasi                  pg_formasi[]
+  pg_master_delivery_order    pg_master_delivery_order[]
+  pg_penawaran                pg_penawaran[]
+  pg_pengiriman               pg_pengiriman[]
+  pg_penjualan                pg_penjualan[]
+  pg_penjualan_btj            pg_penjualan_btj[]
+  pg_penjualan_old            pg_penjualan_old[]
+  pg_penjualan_otc            pg_penjualan_otc[]
+  pg_penjualan_sample         pg_penjualan_sample[]
+  pg_penjualan_temp           pg_penjualan_temp[]
+  pg_penjualan_temp_lunas2021 pg_penjualan_temp_lunas2021[]
+  pg_penjualan_temp_otc       pg_penjualan_temp_otc[]
+  pg_retur_jual               pg_retur_jual[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_presensi {
+  id            BigInt   @id @default(autoincrement())
+  tanggal       DateTime @default(now()) @db.Timestamp(6)
+  nip           String   @db.VarChar(20)
+  nama          String   @db.VarChar(50)
+  photo         String?  @db.VarChar(200)
+  jns_absensi   String?  @db.VarChar(30)
+  jns_kunjungan String?  @db.VarChar(30)
+  user          String?  @db.VarChar(50)
+  outlet        String?  @db.VarChar(100)
+  produk        String?  @db.VarChar(100)
+  respuser      String?
+  keterangan    String?
+  latitude      String?  @db.VarChar(100)
+  longitude     String?  @db.VarChar(100)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_print_logs {
+  id         BigInt    @id @default(autoincrement())
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  no_faktur  String?
+  printed_by String?   @db.Uuid
+  pg_users   pg_users? @relation(fields: [printed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_product {
+  id                          BigInt                        @id @default(autoincrement())
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  nama_produk                 String                        @unique
+  jenis_satuan                String
+  golongan_produk             String
+  merk                        String
+  catatan                     String?
+  kode_produk                 BigInt                        @unique
+  kode_produk_jadi            String?
+  harga_jual_default          Decimal                       @default(0) @db.Decimal
+  catalog_price               Decimal?                      @db.Decimal
+  pg_detail_delivery_order    pg_detail_delivery_order[]
+  pg_konsinyasi               pg_konsinyasi[]
+  pg_mutasi                   pg_mutasi[]
+  pg_pembelian                pg_pembelian[]
+  pg_pembelian_konsinyasi     pg_pembelian_konsinyasi[]
+  pg_penawaran                pg_penawaran[]
+  pg_penjualan                pg_penjualan[]
+  pg_penjualan_btj            pg_penjualan_btj[]
+  pg_penjualan_old            pg_penjualan_old[]
+  pg_penjualan_otc            pg_penjualan_otc[]
+  pg_penjualan_sample         pg_penjualan_sample[]
+  pg_penjualan_temp           pg_penjualan_temp[]
+  pg_penjualan_temp_lunas2021 pg_penjualan_temp_lunas2021[]
+  pg_penjualan_temp_otc       pg_penjualan_temp_otc[]
+  pg_retur_beli               pg_retur_beli[]
+  pg_retur_jual               pg_retur_jual[]
+  pg_riwayat_edit_stok        pg_riwayat_edit_stok[]
+  pg_stok                     pg_stok[]
+  pg_stok_saldo_awal          pg_stok_saldo_awal[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_retur_beli {
+  id                      BigInt      @id @default(autoincrement())
+  created_at              DateTime    @default(now()) @db.Timestamptz(6)
+  id_produk               BigInt
+  harga_beli              Decimal     @db.Decimal
+  jumlah_produk           Decimal     @db.Decimal
+  harga_total             Decimal     @db.Decimal
+  batch                   String
+  exp_date                String
+  id_supplier             BigInt
+  author                  String
+  no_faktur               String
+  catatan                 String?
+  tgl_nota                String
+  tgl_jatuh_tempo         String?
+  diskon_1                Decimal     @default(0) @db.Decimal
+  diskon_2                Decimal     @default(0) @db.Decimal
+  diskon_3                Decimal     @default(0) @db.Decimal
+  last_updated            DateTime?   @default(now()) @db.Timestamptz(6)
+  status_bayar            String?     @default("BELUM LUNAS")
+  sumber_faktur_beli      String
+  lokasi_gudang           String
+  no_faktur_supplier      String
+  tgl_update_status_bayar DateTime?   @db.Timestamptz(6)
+  ppn                     Decimal     @default(0) @db.Decimal
+  hpp                     Decimal?    @db.Decimal
+  pg_product              pg_product  @relation(fields: [id_produk], references: [id])
+  pg_supplier             pg_supplier @relation(fields: [id_supplier], references: [id])
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_retur_jual {
+  id                 BigInt     @id @default(autoincrement())
+  created_at         DateTime   @default(now()) @db.Timestamptz(6)
+  id_produk          BigInt
+  harga_jual         Decimal    @db.Decimal
+  jumlah_produk      Decimal    @db.Decimal
+  harga_total        Decimal    @db.Decimal
+  batch              String
+  exp_date           String
+  id_pof             BigInt
+  id_outlet          BigInt
+  author             String
+  no_faktur          String
+  catatan            String?
+  tgl_nota           String
+  tgl_jatuh_tempo    String
+  diskon_1           Decimal    @default(0) @db.Decimal
+  diskon_2           Decimal    @default(0) @db.Decimal
+  diskon_3           Decimal    @default(0) @db.Decimal
+  last_updated       DateTime?  @default(now()) @db.Timestamptz(6)
+  sumber_faktur_jual String     @default("")
+  divisi             String     @default("")
+  lokasi_gudang      String
+  sumber_faktur_beli String
+  hpp_asli           Decimal?   @db.Decimal
+  ppn                Decimal    @default(0) @db.Decimal
+  faktur_credit_note String?
+  is_tender          Boolean?
+  pg_outlet          pg_outlet  @relation(fields: [id_outlet], references: [id])
+  pg_pof             pg_pof     @relation(fields: [id_pof], references: [id])
+  pg_product         pg_product @relation(fields: [id_produk], references: [id])
+
+  @@index([created_at], map: "idx_retur_jual_created_at")
+  @@index([id_outlet], map: "idx_retur_jual_id_outlet")
+  @@index([id_pof], map: "idx_retur_jual_id_pof")
+  @@index([id_produk], map: "idx_retur_jual_id_produk")
+  @@index([no_faktur], map: "idx_retur_jual_no_faktur")
+  @@index([tgl_nota], map: "idx_retur_jual_tgl_nota")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_riwayat_edit_stok {
+  id            BigInt     @id @default(autoincrement())
+  created_at    DateTime   @default(now()) @db.Timestamptz(6)
+  id_produk     BigInt
+  batch         String
+  exp_date      String
+  lokasi_gudang String
+  jumlah_produk Decimal    @db.Decimal
+  author        String
+  no_faktur     String?    @default("-")
+  deleted_at    DateTime?  @db.Timestamptz(6)
+  hpp_asli      Decimal?   @db.Decimal
+  pg_product    pg_product @relation(fields: [id_produk], references: [id])
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_roles {
+  id         BigInt   @id @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  nama_role  String
+  jenis      String
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_satuan_produk {
+  id            BigInt   @id @default(autoincrement())
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  satuan_produk String   @unique
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_stok {
+  id                 BigInt     @id @default(autoincrement())
+  created_at         DateTime   @default(now()) @db.Timestamptz(6)
+  jumlah_stok        Int
+  batch              String
+  exp_date           String
+  hpp_max            Decimal    @db.Decimal
+  harga_jual_a       Decimal    @db.Decimal
+  harga_jual_b       Decimal    @db.Decimal
+  harga_jual_c       Decimal    @db.Decimal
+  last_updated       DateTime   @default(now()) @db.Timestamptz(6)
+  lokasi_gudang      String
+  hpp_asli           Decimal    @db.Decimal
+  sumber_faktur_beli String?
+  id_produk          BigInt
+  pg_product         pg_product @relation(fields: [id_produk], references: [id], onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_stok_ledger {
+  id            BigInt   @id @default(autoincrement())
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  tipe          String
+  arah          String
+  delta_stok    Decimal  @db.Decimal
+  id_produk     BigInt?
+  batch         String?
+  exp_date      String?
+  lokasi_gudang String?
+  hpp           Decimal? @db.Decimal
+  nilai_stok    Decimal? @default(dbgenerated("(delta_stok * hpp)")) @db.Decimal
+  no_faktur     String?
+  author        String?
+  ref_table     String
+  ref_id        BigInt?
+  op            String
+  catatan       String?
+
+  @@index([id_produk, lokasi_gudang, created_at], map: "idx_stok_ledger_produk_gudang_ts")
+  @@index([ref_table, ref_id], map: "idx_stok_ledger_ref")
+  @@schema("public")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_stok_ledger_baseline {
+  id_produk     Int?
+  lokasi_gudang String?
+  batch         String?
+  exp_date      String?
+  jumlah_stok   Int?
+  captured_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@ignore
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_stok_saldo_awal {
+  id                 BigInt     @id @default(autoincrement())
+  created_at         DateTime   @default(now()) @db.Timestamptz(6)
+  jumlah_stok        Int
+  batch              String
+  exp_date           String
+  hpp_max            Decimal    @db.Decimal
+  harga_jual_a       Decimal    @db.Decimal
+  harga_jual_b       Decimal    @db.Decimal
+  harga_jual_c       Decimal    @db.Decimal
+  last_updated       DateTime   @default(now()) @db.Timestamptz(6)
+  lokasi_gudang      String
+  hpp_asli           Decimal    @db.Decimal
+  sumber_faktur_beli String?
+  id_produk          BigInt
+  pg_product         pg_product @relation(fields: [id_produk], references: [id], onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_supplier {
+  id                      BigInt                    @id @default(autoincrement())
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  nama_supplier           String                    @unique
+  telepon                 String?
+  email                   String?
+  no_npwp                 String?
+  web                     String?
+  nama_wajib_pajak        String?
+  alamat_wajib_pajak      String?
+  plafon                  Decimal?                  @db.Decimal
+  masa_kredit             Decimal?                  @db.Decimal
+  catatan                 String?
+  kode_supplier           String                    @unique
+  kota                    String?
+  alamat                  String?
+  no_izin_ipak_idak       String?
+  no_izin_pbf             String?
+  no_izin_cdob_cdakb      String?
+  nama_apj                String?
+  no_sipa                 String?
+  pg_pembayaran_pembelian pg_pembayaran_pembelian[]
+  pg_pembelian            pg_pembelian[]
+  pg_pembelian_konsinyasi pg_pembelian_konsinyasi[]
+  pg_retur_beli           pg_retur_beli[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_target_collection {
+  id                       BigInt     @id @default(autoincrement())
+  created_at               DateTime   @default(now()) @db.Timestamptz(6)
+  id_formasi               BigInt
+  target                   Decimal    @db.Decimal
+  last_edited_at           DateTime   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  additional_target_produk Json?      @default("[]")
+  bulan                    DateTime?  @db.Date
+  target_jenis             Json?
+  pg_formasi               pg_formasi @relation(fields: [id_formasi], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_target_sales {
+  id                       BigInt     @id @default(autoincrement())
+  created_at               DateTime   @default(now()) @db.Timestamptz(6)
+  id_formasi               BigInt
+  target                   Decimal    @db.Decimal
+  last_edited_at           DateTime   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  additional_target_produk Json?      @default("[]")
+  bulan                    DateTime?  @db.Date
+  target_jenis             Json?
+  pg_formasi               pg_formasi @relation(fields: [id_formasi], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_tt_keuangan {
+  id                  BigInt    @id @default(autoincrement())
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  no_faktur           String
+  id_outlet           BigInt
+  nama_penagih        String
+  no_faktur_penjualan String
+  tgl_nota            String
+  tgl_jatuh_tempo     String
+  nominal_faktur      Decimal   @db.Decimal
+  tgl_cetak           String
+  catatan             String?
+  author              String
+  nama_pof            String
+  pg_outlet           pg_outlet @relation(fields: [id_outlet], references: [id])
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pg_users {
+  id            String          @id @db.Uuid
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  email         String?         @db.VarChar
+  full_name     String?         @default("")
+  role          String[]        @default([])
+  phone_number  String?         @default("")
+  pg_print_logs pg_print_logs[]
+  users         users           @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+enum aal_level {
+  aal1
+  aal2
+  aal3
+
+  @@schema("auth")
+}
+
+enum code_challenge_method {
+  s256
+  plain
+
+  @@schema("auth")
+}
+
+enum factor_status {
+  unverified
+  verified
+
+  @@schema("auth")
+}
+
+enum factor_type {
+  totp
+  webauthn
+  phone
+
+  @@schema("auth")
+}
+
+enum oauth_authorization_status {
+  pending
+  approved
+  denied
+  expired
+
+  @@schema("auth")
+}
+
+enum oauth_client_type {
+  public
+  confidential
+
+  @@schema("auth")
+}
+
+enum oauth_registration_type {
+  dynamic
+  manual
+
+  @@schema("auth")
+}
+
+enum oauth_response_type {
+  code
+
+  @@schema("auth")
+}
+
+enum one_time_token_type {
+  confirmation_token
+  reauthentication_token
+  recovery_token
+  email_change_token_new
+  email_change_token_current
+  phone_change_token
+
+  @@schema("auth")
+}
+
+enum balance_usage_category {
+  RETUR_JUAL                @map("RETUR JUAL")
+  BATAL_RETUR_JUAL          @map("BATAL RETUR JUAL")
+  PELUNASAN_PENJUALAN       @map("PELUNASAN PENJUALAN")
+  BATAL_PELUNASAN_PENJUALAN @map("BATAL PELUNASAN PENJUALAN")
+
+  @@schema("public")
+}
+
+enum balance_usage_type {
+  IN
+  OUT
+
+  @@schema("public")
+}
+
+enum detailtransaksi22_dk {
+  DEBET
+  KREDIT
+
+  @@schema("public")
+}
+
+enum detailtransaksi22_jenis_pembagian_biaya {
+  NON
+  RATA
+  SKALA
+
+  @@schema("public")
+}
+
+enum detailtransaksi2_dk {
+  DEBET
+  KREDIT
+
+  @@schema("public")
+}
+
+enum layer5_aktivitas_cf {
+  // - @map("-")
+  AKTIVITAS_INVESTASI @map("AKTIVITAS INVESTASI")
+  AKTIVITAS_OPERASI   @map("AKTIVITAS OPERASI")
+  AKTIVITAS_PENDANAAN @map("AKTIVITAS PENDANAAN")
+
+  @@schema("public")
+}
+
+enum layer5_cf {
+  // - @map("-")
+  DEPOSITO
+  DANA_INVESTASI_BERSAMA     @map("DANA INVESTASI BERSAMA")
+  PIUTANG_DAGANG             @map("PIUTANG DAGANG")
+  BEBAN_OPERASIONAL          @map("BEBAN OPERASIONAL")
+  BUNGA_PINJAMAN             @map("BUNGA PINJAMAN")
+  PIUTANG_RELASI             @map("PIUTANG RELASI")
+  BEBAN_DIBAYAR_DIMUKA       @map("BEBAN DIBAYAR DIMUKA")
+  ASURANSI_DIBAYAR_DIMUKA    @map("ASURANSI DIBAYAR DIMUKA")
+  SEWA_DIBAYAR_DIMUKA        @map("SEWA DIBAYAR DIMUKA")
+  PAJAK
+  PERSEDIAAN_BARANG_DAGANGAN @map("PERSEDIAAN BARANG DAGANGAN")
+  PERLENGKAPAN
+  ASET_TETAP                 @map("ASET TETAP")
+  HUTANG_MODAL_KERJA         @map("HUTANG MODAL KERJA")
+  SETORAN_MODAL_DARI_PEMILIK @map("SETORAN MODAL DARI PEMILIK")
+  PRIVE
+  DEVIDEN
+  PENJUALAN
+  PENDAPATAN_DILUAR_USAHA    @map("PENDAPATAN DILUAR USAHA")
+  PENDAPATAN_DEPOSITO        @map("PENDAPATAN DEPOSITO")
+  PENJUALAN_AKTIVA           @map("PENJUALAN AKTIVA")
+  HUTANG_AFILIASI            @map("HUTANG AFILIASI")
+  HUTANG_INVESTASI           @map("HUTANG INVESTASI")
+
+  @@schema("public")
+}
+
+enum layer5_karakteristik {
+  // - @map("-")
+  FIX_COST      @map("FIX COST")
+  VARIABEL_COST @map("VARIABEL COST")
+
+  @@schema("public")
+}
+
+enum layer5_passiva_aktiva {
+  // - @map("-")
+  PASSIVA
+  AKTIVA
+
+  @@schema("public")
+}
+
+enum layer5_pos_laporan {
+  LABA_RUGI @map("LABA RUGI")
+  NERACA
+
+  @@schema("public")
+}
+
+enum layer5_pos_saldo {
+  DEBET
+  KREDIT
+
+  @@schema("public")
+}
+
+enum mastertransaksi1_dk {
+  DEBET
+  KREDIT
+
+  @@schema("public")
+}
+
+enum mastertransaksi21_dk {
+  DEBET
+  KREDIT
+
+  @@schema("public")
+}
+
+enum pasanganrekening_dk1 {
+  D
+  K
+
+  @@schema("public")
+}
+
+enum pasanganrekening_dk2 {
+  D
+  K
+
+  @@schema("public")
+}
+
+enum users_aktif {
+  Aktif
+  Non_Aktif @map("Non Aktif")
+
+  @@schema("public")
+}
+
+enum users_role {
+  admin
+  karyawan
+
+  @@schema("public")
+}
