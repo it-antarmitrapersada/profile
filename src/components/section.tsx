@@ -10,8 +10,8 @@ export const Chip = ({
   children,
   onDark = false,
   className,
-}: { onDark?: boolean } & React.ComponentProps<"p">) => (
-  <p
+}: { onDark?: boolean } & React.ComponentProps<"span">) => (
+  <span
     className={cn(
       "inline-block rounded-full px-3.5 py-1.5 text-xs font-semibold",
       onDark ? "bg-white/10 text-ink-foreground" : "bg-accent text-primary",
@@ -19,7 +19,7 @@ export const Chip = ({
     )}
   >
     {children}
-  </p>
+  </span>
 );
 
 export const SectionHeading = ({

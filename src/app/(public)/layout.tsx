@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
+import { NavLink } from "@/components/nav-link";
+import { telHref } from "@/lib/utils";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
 
 export const dynamic = "force-dynamic";
@@ -36,25 +38,20 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
       <header className="sticky top-0 z-10 border-b bg-background/90 backdrop-blur-sm">
         <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-3">
           <Wordmark />
-          <ul className="flex w-full flex-wrap items-center gap-x-6 gap-y-2 sm:ml-auto sm:w-auto">
+          {/* Mobile: CTA sebaris dengan wordmark, nav turun ke baris kedua —
+              dua baris, bukan tiga. Desktop: wordmark · nav · CTA sebaris. */}
+          <Link
+            href="/contact"
+            className="order-2 ml-auto rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:order-3 sm:ml-0"
+          >
+            Hubungi Kami
+          </Link>
+          <ul className="order-3 flex w-full flex-wrap items-center gap-x-6 gap-y-2 sm:order-2 sm:ml-auto sm:w-auto">
             {NAV.map((item) => (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {item.label}
-                </Link>
+                <NavLink href={item.href} label={item.label} />
               </li>
             ))}
-            <li className="hidden sm:block">
-              <Link
-                href="/contact"
-                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-              >
-                Hubungi Kami
-              </Link>
-            </li>
           </ul>
         </nav>
       </header>
@@ -83,7 +80,7 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
                   <li className="flex gap-3">
                     <Phone className="mt-0.5 size-4 shrink-0" aria-hidden />
                     <a
-                      href={`tel:${phone}`}
+                      href={telHref(phone)}
                       className="underline-offset-4 hover:text-ink-foreground hover:underline"
                     >
                       {phone}

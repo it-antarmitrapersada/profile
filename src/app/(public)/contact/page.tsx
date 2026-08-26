@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
+import { telHref } from "@/lib/utils";
 import { Chip } from "@/components/section";
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export default async function ContactPage() {
 
   const cards = [
     { icon: MapPin, label: "Alamat", value: address, href: undefined },
-    { icon: Phone, label: "Telepon", value: phone, href: `tel:${phone}` },
+    { icon: Phone, label: "Telepon", value: phone, href: telHref(phone) },
     { icon: Mail, label: "Surel", value: email, href: `mailto:${email}` },
   ].filter((card) => card.value);
 
