@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { NavLink } from "@/components/nav-link";
@@ -13,17 +14,18 @@ const NAV = [
   { href: "/contact", label: "Kontak" },
 ] as const;
 
-/* Logo sementara: monogram AM dalam kotak hijau. Saat logo resmi ada,
-   ganti blok ini dengan <Image> — satu tempat saja. */
 const Wordmark = () => (
   <Link href="/" className="flex items-center gap-2.5">
-    <span className="grid size-9 place-items-center rounded-lg bg-primary text-sm font-extrabold text-primary-foreground">
-      AM
-    </span>
-    <span className="text-sm leading-tight font-extrabold tracking-tight">
-      Antar Mitra
-      <br />
-      Persada
+    <Image
+      src="/logo.jpeg"
+      alt="PT. Antar Mitra Persada"
+      width={40}
+      height={40}
+      priority
+      className="size-10 rounded-full object-cover"
+    />
+    <span className="hidden text-sm leading-tight font-extrabold tracking-tight sm:inline">
+      Antar Mitra Persada
     </span>
   </Link>
 );
