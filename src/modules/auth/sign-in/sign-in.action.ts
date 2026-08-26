@@ -10,9 +10,8 @@ export const signInAction = async (input: unknown) => {
     throw new Error(parsed.error.message);
   }
 
-  const request = parsed.data;
+  await signIn(parsed.data);
 
-  const response = await signIn(request);
-
-  redirect("/");
+  // /login kini hanya melayani admin konten; "/" adalah beranda publik.
+  redirect("/admin");
 };

@@ -44,14 +44,19 @@ export async function updateSession(request: NextRequest) {
 
   const user = data?.claims;
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  // Situs publik: hanya /admin yang dijaga. Ini cuma menjawab "sudah login?" —
+  // "boleh masuk?" dijawab requireAdmin() di layout dan di server action.
+  if (!user && request.nextUrl.pathname.startsWith("/admin")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Sudah login tapi membuka /login: tidak ada yang bisa dikerjakan di sana.
+  // Yang bukan CMS Admin akan dilempar lagi ke "/" oleh requireAdmin().
+  if (user && request.nextUrl.pathname.startsWith("/login")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin";
     return NextResponse.redirect(url);
   }
 

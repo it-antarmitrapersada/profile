@@ -8,12 +8,11 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * Situs ini publik — hanya /admin yang butuh sesi. Membatasi matcher di
+     * sini berarti pengunjung anonim tidak pernah memicu getClaims()
+     * (round-trip jaringan ke Supabase) saat membaca halaman publik.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/admin/:path*",
+    "/login",
   ],
 };

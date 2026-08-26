@@ -19,13 +19,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "PT. Antar Mitra Persada",
   description:
-    "PT. Antar Mitra Persada is a leading provider of innovative solutions and services, dedicated to delivering excellence and value to our clients across various industries. Our commitment to quality, integrity, and customer satisfaction drives us to continuously improve and adapt in a rapidly changing market.",
+    "Profil PT. Antar Mitra Persada \u2014 visi, misi, nilai perusahaan, dan informasi kontak.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="id"
       className={cn(
         "h-full",
         "antialiased",

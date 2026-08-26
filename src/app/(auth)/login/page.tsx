@@ -26,6 +26,7 @@ export default async function LoginPage() {
           alt="Image"
           width={1920}
           height={1080}
+          loading="lazy"
           style={{ objectFit: "cover" }}
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />
