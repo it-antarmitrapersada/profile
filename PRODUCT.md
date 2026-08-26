@@ -56,17 +56,20 @@ langsung tayang).
 
 ## Capabilities and Constraints
 
-- Konten CMS: about, vision, mission, core values, metrics + tanggal
-  berlakunya, coverage wilayah, advantage, profil owner, kontak, URL peta,
-  URL katalog, sinyal legalitas (nomor izin PBF, sertifikat CDOB, NIB).
-  Semua di satu tabel singleton `cms.company_profile`.
+- Konten CMS: about, vision, mission, core values, metrics, coverage
+  wilayah, advantage, profil owner, kontak, URL peta, URL katalog, sinyal
+  legalitas (nomor izin PBF, sertifikat CDOB, NIB), total pelanggan (chip
+  foto hero, angka manual). Semua di satu tabel singleton
+  `cms.company_profile`.
 - Sinyal legalitas ditampilkan di beranda dekat kartu metrics — titik
   pemeriksaan pertama pejabat pengadaan. Kosong = field itu tidak tayang.
   Isi hanya nomor asli dari dokumen resmi lewat `/admin`; tidak pernah
   dikarang oleh siapa pun yang mengerjakan situs ini.
-- Angka pelanggan menua (120+ RS, 40+ Dinkes, 770+ Puskesmas, per Oktober
-  2025). Keterangan waktu adalah bagian dari klaim dan wajib tampil di dekat
-  angka; admin memperbarui keduanya bersama.
+- Metrics (120+ RS, 40+ Dinkes, 770+ Puskesmas) tidak lagi membawa
+  keterangan tanggal — kolom `metrics_as_of` dihapus atas keputusan
+  eksplisit user meski itu berlawanan dengan prinsip "klaim membawa
+  tanggalnya" yang disarankan; dicatat di sini supaya jelas ini pilihan
+  sadar, bukan regresi yang terlewat.
 - Jangan pernah mengarang: testimoni, nomor izin, sertifikat, angka, klaim
   layanan, atau prosedur pengadaan. Audiens utama adalah orang yang paling
   mampu memeriksa.
@@ -91,8 +94,8 @@ langsung tayang).
 
 ## Evidence on Hand
 
-- Konten nyata terisi di database: visi, misi, HEBAT, metrics per Oktober
-  2025, 8 wilayah coverage, advantage satu pintu, profil owner, alamat
+- Konten nyata terisi di database: visi, misi, HEBAT, metrics, 8 wilayah
+  coverage, advantage satu pintu, profil owner, alamat
   Graha Berseri Sukoharjo, telepon (0271) 5994934, email
   ampersada7@gmail.com, embed Google Maps, URL katalog INAPROC.
 - Aset gambar: hanya `public/warehouse.jpg`. Belum ada logo resmi, foto

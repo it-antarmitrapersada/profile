@@ -2128,6 +2128,9 @@ model company_profile {
   founder_role    String   @default("")
   founder_note    String   @default("")
   catalog_url     String   @default("")
+  pbf_license_no  String   @default("")
+  cdob_cert_no    String   @default("")
+  business_id_no  String   @default("")
   users           users?   @relation(fields: [updated_by], references: [id], onUpdate: NoAction)
 
   @@schema("cms")

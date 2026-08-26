@@ -19,10 +19,10 @@ const Wordmark = () => (
     <Image
       src="/logo.jpeg"
       alt="PT. Antar Mitra Persada"
-      width={40}
-      height={40}
+      width={953}
+      height={759}
       priority
-      className="size-10 rounded-full object-cover"
+      className="h-11 w-auto"
     />
     <span className="hidden text-sm leading-tight font-extrabold tracking-tight sm:inline">
       Antar Mitra Persada

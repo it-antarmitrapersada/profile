@@ -15,7 +15,6 @@ export default async function HomePage() {
   const {
     about,
     metrics,
-    metricsAsOf,
     coverage,
     advantageTitle,
     advantageBody,
@@ -24,6 +23,7 @@ export default async function HomePage() {
     pbfLicenseNo,
     cdobCertNo,
     businessIdNo,
+    totalCustomers,
   } = await getProfile();
 
   const credentials = [
@@ -101,15 +101,15 @@ export default async function HomePage() {
                 className="object-cover"
               />
             </div>
-            {/* Datum yang tidak diulang di kartu metrics: jumlah wilayah,
-                dihitung dari data — ikut berubah saat admin menambah wilayah. */}
-            {coverage.length > 0 && (
+            {/* Angka manual dari admin, bukan turunan data lain — dikontrol
+                langsung supaya bisa mengikuti angka pemasaran yang berlaku. */}
+            {totalCustomers && (
               <div className="absolute -bottom-5 left-6 rounded-2xl bg-background px-5 py-3.5 shadow-md">
                 <p className="text-2xl font-extrabold tracking-tight text-primary">
-                  {coverage.length}
+                  {totalCustomers}
                 </p>
                 <p className="text-xs font-semibold text-muted-foreground">
-                  wilayah jangkauan
+                  Total Pelanggan
                 </p>
               </div>
             )}
@@ -139,11 +139,6 @@ export default async function HomePage() {
               </div>
             ))}
           </dl>
-          {metricsAsOf && (
-            <p className="mt-3 text-xs font-medium text-muted-foreground">
-              Data {metricsAsOf}
-            </p>
-          )}
           {/* Item checklist kualifikasi penyedia — di titik yang sama
               dengan bukti angka, sebelum pembaca lanjut ke narasi. */}
           {credentials.length > 0 && (

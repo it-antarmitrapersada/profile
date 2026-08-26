@@ -25,13 +25,15 @@ export const companyProfileSchema = z.object({
   coreValues: z.array(coreValueSchema).max(12),
 
   metrics: z.array(metricSchema).max(6),
-  metricsAsOf: z.string(),
   coverage: z.array(z.string().min(1, "Wilayah tidak boleh kosong")).max(40),
 
   advantageTitle: z.string(),
   advantageBody: z.string(),
   // etalase e-Katalog INAPROC — aksi utama bagi pejabat pengadaan
   catalogUrl: z.union([z.url("URL katalog tidak valid"), z.literal("")]),
+  // Chip di foto hero. Diisi manual, bukan hasil hitung — admin yang
+  // menentukan angkanya.
+  totalCustomers: z.string(),
 
   // Sinyal legalitas: kosong = tidak ditampilkan. Isi hanya nomor asli
   // dari dokumen resmi — tidak pernah dikarang.

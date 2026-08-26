@@ -59,7 +59,7 @@ export function ProfileForm({ profile }: { profile: CompanyProfile }) {
       mission: toLines(mission),
       coreValues: coreValues.filter((value) => value.name.trim()),
       metrics: metrics.filter((metric) => metric.label.trim()),
-      metricsAsOf: text("metricsAsOf"),
+      totalCustomers: text("totalCustomers"),
       coverage: toLines(coverage),
       advantageTitle: text("advantageTitle"),
       advantageBody: text("advantageBody"),
@@ -244,17 +244,18 @@ export function ProfileForm({ profile }: { profile: CompanyProfile }) {
 
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="metricsAsOf">Angka berlaku</FieldLabel>
+              <FieldLabel htmlFor="totalCustomers">
+                Total Pelanggan (chip foto hero)
+              </FieldLabel>
               <Input
-                id="metricsAsOf"
-                name="metricsAsOf"
-                placeholder="per Oktober 2025"
-                defaultValue={profile.metricsAsOf}
+                id="totalCustomers"
+                name="totalCustomers"
+                placeholder="1000+"
+                defaultValue={profile.totalCustomers}
               />
               <FieldDescription>
-                Ditampilkan di dekat angka. Menyebutkan kapan angka itu berlaku
-                membuatnya bisa dipercaya — perbarui setiap kali angkanya
-                berubah.
+                Angka bebas, diisi manual — tidak dihitung otomatis.
+                Kosongkan untuk menyembunyikan chip di foto beranda.
               </FieldDescription>
             </Field>
             <Field>
