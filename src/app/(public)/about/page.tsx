@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
-import { Eyebrow, SectionHeading } from "@/components/section";
+import { Chip, SectionHeading } from "@/components/section";
 
 export const metadata: Metadata = {
   title: "Tentang Kami | PT. Antar Mitra Persada",
@@ -19,32 +19,47 @@ export default async function AboutPage() {
     founderNote,
   } = await getProfile();
 
+  const initials = founderName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word.charAt(0))
+    .join("");
+
   return (
-    <div className="mx-auto max-w-5xl px-6 pt-20 pb-24 sm:pt-28">
-      <Eyebrow>Profil Perusahaan</Eyebrow>
-      <h1 className="mt-6 font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.05] font-bold tracking-[-0.03em]">
+    <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
+      <Chip>Profil Perusahaan</Chip>
+      <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
         Tentang Kami
       </h1>
 
       {about && (
-        <p className="mt-10 max-w-[62ch] font-body text-lg leading-[1.7] whitespace-pre-line">
+        <p className="mt-8 max-w-3xl leading-relaxed whitespace-pre-line text-muted-foreground">
           {about}
         </p>
       )}
 
       {founderName && (
-        <section className="mt-20">
-          {/* Nama dan jabatan satu kesatuan, jadi garisnya turun ke bawah
-              keduanya — bukan menyisip di antaranya. */}
-          <div className="border-b pb-4">
-            <Eyebrow>Owner</Eyebrow>
-            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-              {founderName}
-            </h2>
-            {founderRole && <Eyebrow className="mt-2">{founderRole}</Eyebrow>}
+        <section className="mt-16 max-w-3xl rounded-3xl bg-muted p-8 sm:p-10">
+          <div className="flex items-center gap-4">
+            <span
+              aria-hidden
+              className="grid size-14 shrink-0 place-items-center rounded-full bg-primary text-lg font-extrabold text-primary-foreground"
+            >
+              {initials}
+            </span>
+            <div>
+              <h2 className="text-xl font-extrabold tracking-tight">
+                {founderName}
+              </h2>
+              {founderRole && (
+                <p className="text-sm font-medium text-muted-foreground">
+                  {founderRole}
+                </p>
+              )}
+            </div>
           </div>
           {founderNote && (
-            <p className="mt-6 max-w-[58ch] font-body leading-[1.7] whitespace-pre-line text-muted-foreground">
+            <p className="mt-6 leading-relaxed whitespace-pre-line text-muted-foreground">
               {founderNote}
             </p>
           )}
@@ -52,36 +67,36 @@ export default async function AboutPage() {
       )}
 
       {vision && (
-        <section className="mt-20">
-          <SectionHeading eyebrow="Visi">Arah yang kami tuju</SectionHeading>
-          <p className="mt-8 max-w-[52ch] font-display text-2xl leading-[1.3] font-medium tracking-[-0.02em] text-balance sm:text-3xl">
+        <section className="mt-16">
+          <SectionHeading chip="Visi">Arah yang kami tuju</SectionHeading>
+          <p className="mt-6 max-w-[40ch] text-2xl leading-snug font-extrabold tracking-tight text-balance text-primary sm:text-3xl">
             {vision}
           </p>
         </section>
       )}
 
       {mission.length > 0 && (
-        <section className="mt-20">
-          <SectionHeading eyebrow="Misi">Cara kami menempuhnya</SectionHeading>
-          {/* Misi bernomor karena urutannya memang bermakna. Satu baris berarti
-              satu paragraf utuh — tidak ada nomor untuk daftar berisi satu. */}
+        <section className="mt-16">
+          <SectionHeading chip="Misi">Cara kami menempuhnya</SectionHeading>
+          {/* Misi bernomor hanya kalau memang lebih dari satu poin. */}
           {mission.length === 1 ? (
-            <p className="mt-8 max-w-[62ch] font-body text-lg leading-[1.7] whitespace-pre-line">
+            <p className="mt-6 max-w-3xl leading-relaxed whitespace-pre-line text-muted-foreground">
               {mission[0]}
             </p>
           ) : (
-            <ol className="mt-4">
+            <ol className="mt-8 grid max-w-3xl gap-4">
               {mission.map((point, index) => (
                 <li
                   key={index}
-                  className="grid gap-2 border-b py-5 sm:grid-cols-[9rem_1fr] sm:gap-8"
+                  className="flex gap-4 rounded-2xl border bg-background p-5 shadow-sm"
                 >
-                  <Eyebrow className="sm:pt-1.5">
-                    {String(index + 1).padStart(2, "0")}
-                  </Eyebrow>
-                  <p className="max-w-[58ch] font-body text-base leading-[1.7]">
-                    {point}
-                  </p>
+                  <span
+                    aria-hidden
+                    className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-sm font-extrabold text-primary"
+                  >
+                    {index + 1}
+                  </span>
+                  <p className="leading-relaxed">{point}</p>
                 </li>
               ))}
             </ol>
@@ -90,31 +105,30 @@ export default async function AboutPage() {
       )}
 
       {coreValues.length > 0 && (
-        <section className="mt-20">
-          <SectionHeading eyebrow="Nilai">Yang kami pegang</SectionHeading>
-          {/* Huruf awal tiap nilai membentuk akronim perusahaan, jadi urutan di
-              sini mengabarkan sesuatu. Katanya tidak ditulis di mana pun —
-              pembaca menemukannya sendiri dari kolom huruf. */}
-          <ul className="mt-4">
+        <section className="mt-16">
+          <SectionHeading chip="Nilai">Yang kami pegang</SectionHeading>
+          {/* Huruf awal tiap nilai membentuk akronim perusahaan — urutannya
+              mengabarkan sesuatu, dan katanya dibiarkan ditemukan pembaca. */}
+          {/* Satu baris berlima di layar lebar: huruf-hurufnya mengeja
+              akronimnya sendiri. */}
+          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {coreValues.map((value) => (
               <li
                 key={value.name}
-                className="grid gap-1 border-b py-6 sm:grid-cols-[4.5rem_1fr] sm:gap-8"
+                className="rounded-2xl border bg-background p-6 shadow-sm"
               >
-                <p
+                <span
                   aria-hidden
-                  className="font-display text-3xl leading-none font-bold tracking-[-0.03em] text-primary sm:text-4xl"
+                  className="grid size-12 place-items-center rounded-full bg-accent text-xl font-extrabold text-primary"
                 >
                   {value.name.charAt(0).toUpperCase()}
+                </span>
+                <h3 className="mt-4 text-lg font-extrabold tracking-tight">
+                  {value.name}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                  {value.description}
                 </p>
-                <div>
-                  <h3 className="font-display text-lg font-semibold tracking-tight">
-                    {value.name}
-                  </h3>
-                  <p className="mt-2 max-w-[58ch] font-body leading-[1.7] text-muted-foreground">
-                    {value.description}
-                  </p>
-                </div>
               </li>
             ))}
           </ul>

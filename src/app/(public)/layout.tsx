@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
-import { Eyebrow } from "@/components/section";
 
 export const dynamic = "force-dynamic";
 
@@ -11,91 +11,107 @@ const NAV = [
   { href: "/contact", label: "Kontak" },
 ] as const;
 
+/* Logo sementara: monogram AM dalam kotak hijau. Saat logo resmi ada,
+   ganti blok ini dengan <Image> — satu tempat saja. */
+const Wordmark = () => (
+  <Link href="/" className="flex items-center gap-2.5">
+    <span className="grid size-9 place-items-center rounded-lg bg-primary text-sm font-extrabold text-primary-foreground">
+      AM
+    </span>
+    <span className="text-sm leading-tight font-extrabold tracking-tight">
+      Antar Mitra
+      <br />
+      Persada
+    </span>
+  </Link>
+);
+
 export default async function PublicLayout({ children }: LayoutProps<"/">) {
   const { address, phone, email, catalogUrl } = await getProfile();
 
   return (
     <>
-      {/* Di layar sempit wordmark dan nav tidak muat sebaris: wordmark
-          dijaga utuh, nav turun ke baris kedua. Tanpa menu hamburger —
-          empat tautan tidak perlu disembunyikan di balik tombol. */}
+      {/* Wordmark utuh di kiri; di layar sempit nav turun ke baris kedua —
+          empat tautan tidak perlu disembunyikan di balik hamburger. */}
       <header className="sticky top-0 z-10 border-b bg-background/90 backdrop-blur-sm">
-        <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-4 sm:py-5">
-          <Link
-            href="/"
-            className="font-display text-sm font-bold tracking-tight whitespace-nowrap uppercase"
-          >
-            Antar Mitra Persada
-          </Link>
-          <ul className="flex w-full flex-wrap items-center gap-x-5 gap-y-2 sm:ml-auto sm:w-auto sm:gap-6">
+        <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-3">
+          <Wordmark />
+          <ul className="flex w-full flex-wrap items-center gap-x-6 gap-y-2 sm:ml-auto sm:w-auto">
             {NAV.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="font-mono text-[0.6875rem] tracking-[0.14em] text-muted-foreground uppercase transition-colors hover:text-foreground"
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {item.label}
                 </Link>
               </li>
             ))}
+            <li className="hidden sm:block">
+              <Link
+                href="/contact"
+                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Hubungi Kami
+              </Link>
+            </li>
           </ul>
         </nav>
       </header>
 
       <main className="flex-1">{children}</main>
 
-      {/* Footer hanya memuat yang benar-benar ada. Tidak ada tautan sosial
-          karena akunnya belum ada, tidak ada "Kebijakan Privasi" karena
-          halamannya belum ada — tautan mati lebih merugikan daripada kolom
-          yang lebih pendek. */}
-      <footer id="footer" className="border-t bg-background scroll-mt-20">
-        <div className="mx-auto max-w-5xl px-6 py-16">
+      {/* Footer hanya memuat yang benar-benar ada — tanpa tautan sosial
+          (akunnya belum ada) dan tanpa halaman legal yang belum ditulis. */}
+      <footer className="bg-ink text-ink-foreground">
+        <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
             <div>
-              <p className="font-display text-base font-bold tracking-tight uppercase">
+              <p className="text-base font-extrabold tracking-tight">
                 PT. Antar Mitra Persada
               </p>
-              <p className="mt-4 max-w-[34ch] font-body leading-[1.7] whitespace-pre-line text-muted-foreground">
-                {address}
-              </p>
-              <dl className="mt-6 space-y-2 font-body text-muted-foreground">
+              <ul className="mt-5 space-y-3 text-sm leading-relaxed text-ink-foreground/70">
+                {address && (
+                  <li className="flex gap-3">
+                    <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden />
+                    <span className="max-w-[36ch] whitespace-pre-line">
+                      {address}
+                    </span>
+                  </li>
+                )}
                 {phone && (
-                  <div className="flex gap-3">
-                    <dt className="sr-only">Telepon</dt>
-                    <dd>
-                      <a
-                        href={`tel:${phone}`}
-                        className="underline-offset-4 hover:text-foreground hover:underline"
-                      >
-                        {phone}
-                      </a>
-                    </dd>
-                  </div>
+                  <li className="flex gap-3">
+                    <Phone className="mt-0.5 size-4 shrink-0" aria-hidden />
+                    <a
+                      href={`tel:${phone}`}
+                      className="underline-offset-4 hover:text-ink-foreground hover:underline"
+                    >
+                      {phone}
+                    </a>
+                  </li>
                 )}
                 {email && (
-                  <div className="flex gap-3">
-                    <dt className="sr-only">Surel</dt>
-                    <dd>
-                      <a
-                        href={`mailto:${email}`}
-                        className="underline-offset-4 hover:text-foreground hover:underline"
-                      >
-                        {email}
-                      </a>
-                    </dd>
-                  </div>
+                  <li className="flex gap-3">
+                    <Mail className="mt-0.5 size-4 shrink-0" aria-hidden />
+                    <a
+                      href={`mailto:${email}`}
+                      className="underline-offset-4 hover:text-ink-foreground hover:underline"
+                    >
+                      {email}
+                    </a>
+                  </li>
                 )}
-              </dl>
+              </ul>
             </div>
 
             <nav aria-label="Halaman">
-              <Eyebrow className="border-b pb-3">Halaman</Eyebrow>
-              <ul className="mt-4 space-y-3">
+              <p className="text-sm font-semibold">Halaman</p>
+              <ul className="mt-4 space-y-3 text-sm">
                 {NAV.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="font-body text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                      className="text-ink-foreground/70 underline-offset-4 hover:text-ink-foreground hover:underline"
                     >
                       {item.label}
                     </Link>
@@ -105,32 +121,30 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
             </nav>
 
             <div>
-              <Eyebrow className="border-b pb-3">Pengadaan</Eyebrow>
-              <ul className="mt-4 space-y-3">
+              <p className="text-sm font-semibold">Pengadaan</p>
+              <ul className="mt-4 space-y-3 text-sm">
                 {catalogUrl && (
                   <li>
                     <a
                       href={catalogUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-body text-primary underline-offset-4 hover:underline"
+                      className="font-semibold underline-offset-4 hover:underline"
                     >
                       Katalog INAPROC ↗
                     </a>
                   </li>
                 )}
-                <li className="font-body text-muted-foreground">
+                <li className="text-ink-foreground/70">
                   LPSE &amp; e-Katalog sektoral Kemenkes
                 </li>
               </ul>
             </div>
           </div>
 
-          <div className="mt-14 flex flex-wrap items-baseline justify-between gap-3 border-t pt-6">
-            <Eyebrow>
-              © {new Date().getFullYear()} PT. Antar Mitra Persada
-            </Eyebrow>
-            <Eyebrow>Sukoharjo, Jawa Tengah</Eyebrow>
+          <div className="mt-14 flex flex-wrap items-baseline justify-between gap-3 border-t border-white/10 pt-6 text-xs text-ink-foreground/60">
+            <p>© {new Date().getFullYear()} PT. Antar Mitra Persada</p>
+            <p>Sukoharjo, Jawa Tengah</p>
           </div>
         </div>
       </footer>

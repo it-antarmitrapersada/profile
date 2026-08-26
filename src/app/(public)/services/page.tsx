@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
-import { Eyebrow, SectionHeading } from "@/components/section";
+import { Chip } from "@/components/section";
 
 export const metadata: Metadata = {
   title: "Layanan | PT. Antar Mitra Persada",
@@ -10,58 +10,53 @@ export const metadata: Metadata = {
 };
 
 export default async function ServicesPage() {
-  const { advantageTitle, advantageBody, coverage, catalogUrl } =
-    await getProfile();
+  const { advantageTitle, advantageBody, catalogUrl } = await getProfile();
 
   return (
-    <div className="mx-auto max-w-5xl px-6 pt-20 pb-24 sm:pt-28">
-      <Eyebrow>Layanan Pengadaan</Eyebrow>
-      <h1 className="mt-6 font-display text-[clamp(2rem,5vw,3.25rem)] leading-[1.05] font-bold tracking-[-0.03em]">
+    <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
+      <Chip>Layanan Pengadaan</Chip>
+      <h1 className="mt-4 max-w-[20ch] text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
         {advantageTitle || "Layanan"}
       </h1>
 
       {advantageBody && (
-        <p className="mt-10 max-w-[62ch] font-body text-lg leading-[1.7] whitespace-pre-line">
-          {advantageBody}
-        </p>
+        <div className="mt-10 max-w-3xl rounded-3xl bg-muted p-8 sm:p-10">
+          <p className="leading-relaxed whitespace-pre-line">{advantageBody}</p>
+        </div>
       )}
 
-      {coverage.length > 0 && (
-        <section className="mt-20">
-          <SectionHeading eyebrow="Jangkauan">
-            Wilayah yang kami layani
-          </SectionHeading>
-          <ul className="mt-8 flex flex-wrap gap-x-3 gap-y-3">
-            {coverage.map((area) => (
-              <li
-                key={area}
-                className="border px-3 py-1.5 font-mono text-[0.6875rem] tracking-[0.12em] uppercase"
+      {/* Banner ajakan: satu-satunya panel gelap di halaman ini. */}
+      <section className="mt-16 rounded-3xl bg-ink px-8 py-12 text-ink-foreground sm:px-12">
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <div>
+            <h2 className="max-w-[24ch] text-2xl font-extrabold tracking-tight text-balance sm:text-3xl">
+              Mulai pengadaan lewat e-Katalog hari ini.
+            </h2>
+            <p className="mt-2 text-ink-foreground/70">
+              Seluruh kebutuhan obat, BMHP, dan alat kesehatan dari satu
+              penyedia.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {catalogUrl && (
+              <a
+                href={catalogUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-background px-6 py-3 text-sm font-semibold text-foreground transition-opacity hover:opacity-90"
               >
-                {area}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <div className="mt-20 flex flex-wrap items-center gap-x-8 gap-y-4 border-t pt-8">
-        {catalogUrl && (
-          <a
-            href={catalogUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="border border-primary px-5 py-3 font-mono text-[0.6875rem] tracking-[0.14em] text-primary uppercase transition-colors hover:bg-primary hover:text-primary-foreground"
-          >
-            Lihat Katalog INAPROC ↗
-          </a>
-        )}
-        <Link
-          href="/contact"
-          className="font-mono text-[0.6875rem] tracking-[0.14em] text-muted-foreground uppercase underline-offset-8 hover:text-foreground hover:underline"
-        >
-          Hubungi Kami →
-        </Link>
-      </div>
+                Lihat Katalog INAPROC ↗
+              </a>
+            )}
+            <Link
+              href="/contact"
+              className="rounded-full border border-white/25 px-6 py-3 text-sm font-semibold transition-colors hover:bg-white/10"
+            >
+              Hubungi Kami
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,18 +1,20 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Sistem tanda halaman publik: label mono huruf kapital + garis rambut.
- * Diambil dari penandaan dokumen izin — bisnis PBF berjalan di atas berkas
- * bernomor, jadi strukturnya mengabarkan sesuatu yang benar, bukan menghias.
+ * Primitif halaman publik, bahasa "korporat hijau": chip pill sebagai label
+ * bagian, judul ExtraBold. Pemisahan antarbagian lewat permukaan (putih vs
+ * mint vs ink), bukan garis.
  */
 
-export const Eyebrow = ({
+export const Chip = ({
   children,
+  onDark = false,
   className,
-}: React.ComponentProps<"p">) => (
+}: { onDark?: boolean } & React.ComponentProps<"p">) => (
   <p
     className={cn(
-      "font-mono text-[0.6875rem] tracking-[0.18em] text-muted-foreground uppercase",
+      "inline-block rounded-full px-3.5 py-1.5 text-xs font-semibold",
+      onDark ? "bg-white/10 text-ink-foreground" : "bg-accent text-primary",
       className,
     )}
   >
@@ -21,33 +23,14 @@ export const Eyebrow = ({
 );
 
 export const SectionHeading = ({
-  eyebrow,
+  chip,
   children,
   className,
-}: { eyebrow: string } & React.ComponentProps<"h2">) => (
-  <div className={cn("border-b pb-4", className)}>
-    <Eyebrow>{eyebrow}</Eyebrow>
-    <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+}: { chip: string } & React.ComponentProps<"h2">) => (
+  <div className={className}>
+    <Chip>{chip}</Chip>
+    <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
       {children}
     </h2>
-  </div>
-);
-
-/** Satu baris catatan: label mono di kiri, isi di kanan, dipisah garis rambut. */
-export const RecordRow = ({
-  label,
-  children,
-  className,
-}: { label: string } & React.ComponentProps<"div">) => (
-  <div
-    className={cn(
-      "grid gap-2 border-b py-5 sm:grid-cols-[9rem_1fr] sm:gap-8",
-      className,
-    )}
-  >
-    <Eyebrow className="sm:pt-1">{label}</Eyebrow>
-    <div className="font-body text-[0.9375rem] leading-relaxed whitespace-pre-line">
-      {children}
-    </div>
   </div>
 );
