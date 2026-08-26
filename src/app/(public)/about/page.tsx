@@ -34,8 +34,15 @@ export default async function AboutPage() {
 
       {founderName && (
         <section className="mt-20">
-          <SectionHeading eyebrow="Owner">{founderName}</SectionHeading>
-          {founderRole && <Eyebrow className="mt-4">{founderRole}</Eyebrow>}
+          {/* Nama dan jabatan satu kesatuan, jadi garisnya turun ke bawah
+              keduanya — bukan menyisip di antaranya. */}
+          <div className="border-b pb-4">
+            <Eyebrow>Owner</Eyebrow>
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+              {founderName}
+            </h2>
+            {founderRole && <Eyebrow className="mt-2">{founderRole}</Eyebrow>}
+          </div>
           {founderNote && (
             <p className="mt-6 max-w-[58ch] font-body leading-[1.7] whitespace-pre-line text-muted-foreground">
               {founderNote}

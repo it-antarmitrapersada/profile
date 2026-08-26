@@ -13,14 +13,17 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
   return (
     <>
       <header className="sticky top-0 z-10 border-b bg-background/90 backdrop-blur-sm">
-        <nav className="mx-auto flex max-w-5xl items-center gap-8 px-6 py-5">
+        {/* Di layar sempit wordmark dan nav tidak muat sebaris: wordmark
+            dijaga utuh, nav turun ke baris kedua. Tanpa menu hamburger —
+            empat tautan tidak perlu disembunyikan di balik tombol. */}
+        <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-4 sm:py-5">
           <Link
             href="/"
-            className="font-display text-sm font-bold tracking-tight uppercase"
+            className="font-display text-sm font-bold tracking-tight whitespace-nowrap uppercase"
           >
             Antar Mitra Persada
           </Link>
-          <ul className="ml-auto flex items-center gap-6">
+          <ul className="flex w-full flex-wrap items-center gap-x-5 gap-y-2 sm:ml-auto sm:w-auto sm:gap-6">
             {NAV.map((item) => (
               <li key={item.href}>
                 <Link

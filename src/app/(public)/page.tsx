@@ -12,9 +12,9 @@ export default async function HomePage() {
           dirinya sendiri — visinya — dipasang sebagai pernyataan, bukan sebagai
           subjudul di bawah foto stok. */}
       <section className="mx-auto max-w-5xl px-6 pt-20 pb-16 sm:pt-32 sm:pb-20">
-        <Eyebrow className="rise">PT. Antar Mitra Persada</Eyebrow>
+        <Eyebrow className="rise">Visi</Eyebrow>
         <h1
-          className="rise mt-6 max-w-[20ch] font-display text-[clamp(2.25rem,6vw,4.25rem)] leading-[1.02] font-bold tracking-[-0.03em] text-balance"
+          className="rise mt-6 max-w-[34ch] font-display text-[clamp(1.75rem,3.2vw,2.5rem)] leading-[1.15] font-bold tracking-[-0.02em] text-balance"
           style={{ animationDelay: "60ms" }}
         >
           {vision || "Distribusi obat dan alat kesehatan berskala nasional."}
