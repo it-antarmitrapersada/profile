@@ -1,3 +1,4 @@
+import { cache } from "react";
 import prisma from "@/lib/prisma";
 import {
   companyProfileSchema,
@@ -7,8 +8,11 @@ import {
 /**
  * Baris pasti ada: dibuat oleh 001_create_cms.sql dan dijaga
  * `check (id = 1)` di database, jadi tidak ada cabang "belum ada profil".
+ *
+ * Dibungkus cache(): layout (footer) dan page memanggilnya dalam satu request,
+ * dan React men-dedupe-nya jadi satu query.
  */
-export const getProfile = async (): Promise<CompanyProfile> => {
+export const getProfile = cache(async (): Promise<CompanyProfile> => {
   const row = await prisma.company_profile.findUniqueOrThrow({
     where: { id: 1 },
   });
@@ -34,4 +38,4 @@ export const getProfile = async (): Promise<CompanyProfile> => {
     email: row.email,
     mapsEmbedUrl: row.maps_embed_url,
   });
-};
+});
