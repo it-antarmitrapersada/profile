@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { SignInDto } from "./auth.dto";
+import { SignInDto } from "../auth.dto";
 
 export const signIn = async (input: SignInDto) => {
   const supabase = await createClient();

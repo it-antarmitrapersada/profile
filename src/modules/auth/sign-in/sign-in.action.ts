@@ -1,7 +1,8 @@
 "use server";
 
-import { userCredentialsSchema } from "./auth.dto";
-import { signIn } from "./auth.service";
+import { redirect } from "next/navigation";
+import { userCredentialsSchema } from "../auth.dto";
+import { signIn } from "./sign-in.service";
 
 export const signInAction = async (input: unknown) => {
   const parsed = userCredentialsSchema.safeParse(input);
@@ -12,5 +13,6 @@ export const signInAction = async (input: unknown) => {
   const request = parsed.data;
 
   const response = await signIn(request);
-  return response;
+
+  redirect("/");
 };
