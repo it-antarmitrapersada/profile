@@ -6,7 +6,10 @@ import { telHref } from "@/lib/utils";
 
 // Tinggi header sticky, dipotong dari tinggi layar supaya hero mengisi
 // satu layar penuh tanpa terdorong keluar.
-const FULL_SCREEN = "min-h-[calc(100svh-4.25rem)]";
+// Header mobile dua baris (~6.5rem), desktop satu baris (4.25rem) — nilai
+// potong ikut breakpoint supaya hero benar-benar pas satu layar di keduanya.
+const FULL_SCREEN =
+  "min-h-[calc(100svh-6.5rem)] sm:min-h-[calc(100svh-4.25rem)]";
 
 export default async function HomePage() {
   const {
@@ -18,12 +21,25 @@ export default async function HomePage() {
     advantageBody,
     catalogUrl,
     phone,
-    email,
+    pbfLicenseNo,
+    cdobCertNo,
+    businessIdNo,
   } = await getProfile();
 
-  // Dipotong di batas paragraf: penulisnya sudah menentukan di mana satu
-  // gagasan selesai.
-  const [lead, second] = about.split(/\n\s*\n/);
+  const credentials = [
+    { label: "Izin PBF", value: pbfLicenseNo },
+    { label: "Sertifikat CDOB", value: cdobCertNo },
+    { label: "NIB", value: businessIdNo },
+  ].filter((item) => item.value);
+
+  // Heading berhenti di kalimat pertama — paragraf bukan headline, dan
+  // about tanpa baris kosong pun tidak akan jadi dinding extrabold.
+  const [lead = "", ...restParas] = about.split(/\n\s*\n/);
+  const sentenceBreak = lead.match(/^(.+?[.!?])\s+([\s\S]+)$/);
+  const aboutHeading = sentenceBreak ? sentenceBreak[1] : lead;
+  const aboutBody = [sentenceBreak?.[2], restParas[0]]
+    .filter(Boolean)
+    .join("\n\n");
   const [advantageLead] = advantageBody.split(/\n\s*\n/);
 
   return (
@@ -128,6 +144,20 @@ export default async function HomePage() {
               Data {metricsAsOf}
             </p>
           )}
+          {/* Item checklist kualifikasi penyedia — di titik yang sama
+              dengan bukti angka, sebelum pembaca lanjut ke narasi. */}
+          {credentials.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 border-t pt-6 text-sm">
+              {credentials.map((item) => (
+                <p key={item.label} className="text-muted-foreground">
+                  <span className="font-semibold text-foreground">
+                    {item.label}
+                  </span>{" "}
+                  {item.value}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -176,11 +206,11 @@ export default async function HomePage() {
             <Chip>Tentang Kami</Chip>
             {/* Paragraf utuh, bukan headline — ukurannya mengikuti itu. */}
             <h2 className="mt-4 max-w-[30ch] text-2xl leading-snug font-extrabold tracking-tight text-balance sm:text-3xl">
-              {lead}
+              {aboutHeading}
             </h2>
-            {second && (
-              <p className="mt-6 max-w-[56ch] leading-relaxed text-muted-foreground">
-                {second}
+            {aboutBody && (
+              <p className="mt-6 max-w-[56ch] leading-relaxed whitespace-pre-line text-muted-foreground">
+                {aboutBody}
               </p>
             )}
             <Link
@@ -209,33 +239,28 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Penutup: saat keputusan matang, aksinya ada di sini — bukan satu
-          layar ke atas, dan bukan alamat email di footer. */}
-      <section className="bg-ink text-ink-foreground">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-8 px-6 py-16">
+      {/* Penutup: panel ber-radius di atas latar putih — jahitan tegas
+          sebelum footer supaya momen bertindak punya panggungnya sendiri.
+          Email sengaja tidak di sini: telepon kantor adalah sinyal
+          legitimasi, dan email tetap tersedia di footer dan /contact. */}
+      <section className="mx-auto max-w-6xl px-6 pb-24">
+        <div className="flex flex-wrap items-center justify-between gap-8 rounded-3xl bg-ink px-8 py-12 text-ink-foreground sm:px-12">
           <div>
             <h2 className="max-w-[22ch] text-2xl font-extrabold tracking-tight text-balance sm:text-3xl">
-              Mulai dari katalog, atau hubungi kami langsung.
+              {catalogUrl
+                ? "Mulai dari katalog, atau hubungi kami langsung."
+                : "Hubungi kami untuk memulai pengadaan Anda."}
             </h2>
-            <p className="mt-3 text-sm text-ink-foreground/70">
-              {phone && (
+            {phone && (
+              <p className="mt-3 text-sm text-ink-foreground/70">
                 <a
                   href={telHref(phone)}
                   className="font-semibold text-ink-foreground underline-offset-4 hover:underline"
                 >
                   {phone}
                 </a>
-              )}
-              {phone && email && <span aria-hidden> · </span>}
-              {email && (
-                <a
-                  href={`mailto:${email}`}
-                  className="font-semibold text-ink-foreground underline-offset-4 hover:underline"
-                >
-                  {email}
-                </a>
-              )}
-            </p>
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap gap-4">
             {catalogUrl && (

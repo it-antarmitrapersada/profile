@@ -33,6 +33,12 @@ export const companyProfileSchema = z.object({
   // etalase e-Katalog INAPROC — aksi utama bagi pejabat pengadaan
   catalogUrl: z.union([z.url("URL katalog tidak valid"), z.literal("")]),
 
+  // Sinyal legalitas: kosong = tidak ditampilkan. Isi hanya nomor asli
+  // dari dokumen resmi — tidak pernah dikarang.
+  pbfLicenseNo: z.string(),
+  cdobCertNo: z.string(),
+  businessIdNo: z.string(),
+
   founderName: z.string(),
   founderRole: z.string(),
   founderNote: z.string(),

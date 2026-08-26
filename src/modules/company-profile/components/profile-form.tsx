@@ -64,6 +64,9 @@ export function ProfileForm({ profile }: { profile: CompanyProfile }) {
       advantageTitle: text("advantageTitle"),
       advantageBody: text("advantageBody"),
       catalogUrl: text("catalogUrl"),
+      pbfLicenseNo: text("pbfLicenseNo"),
+      cdobCertNo: text("cdobCertNo"),
+      businessIdNo: text("businessIdNo"),
       founderName: text("founderName"),
       founderRole: text("founderRole"),
       founderNote: text("founderNote"),
@@ -304,6 +307,46 @@ export function ProfileForm({ profile }: { profile: CompanyProfile }) {
                 Alamat etalase e-Katalog perusahaan. Ditampilkan sebagai ajakan
                 utama di beranda dan halaman Layanan. Kosongkan untuk
                 menyembunyikannya.
+              </FieldDescription>
+            </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Legalitas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="pbfLicenseNo">Nomor Izin PBF</FieldLabel>
+              <Input
+                id="pbfLicenseNo"
+                name="pbfLicenseNo"
+                defaultValue={profile.pbfLicenseNo}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="cdobCertNo">Nomor Sertifikat CDOB</FieldLabel>
+              <Input
+                id="cdobCertNo"
+                name="cdobCertNo"
+                defaultValue={profile.cdobCertNo}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="businessIdNo">
+                Nomor Induk Berusaha (NIB)
+              </FieldLabel>
+              <Input
+                id="businessIdNo"
+                name="businessIdNo"
+                defaultValue={profile.businessIdNo}
+              />
+              <FieldDescription>
+                Isi hanya nomor asli dari dokumen resmi. Kosongkan untuk
+                menyembunyikan field itu dari halaman publik.
               </FieldDescription>
             </Field>
           </FieldGroup>
