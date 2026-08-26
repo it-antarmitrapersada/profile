@@ -13,12 +13,22 @@ export const getProfile = async (): Promise<CompanyProfile> => {
     where: { id: 1 },
   });
 
-  // parse, bukan cast — kolom jsonb datang sebagai Prisma.JsonValue
+  // parse, bukan cast — kolom jsonb datang sebagai Prisma.JsonValue.
+  // Zod sekaligus menyaring field lama yang sudah tidak dipakai (mis. `icon`).
   return companyProfileSchema.parse({
     about: row.about,
     vision: row.vision,
     mission: row.mission,
     coreValues: row.core_values,
+    metrics: row.metrics,
+    metricsAsOf: row.metrics_as_of,
+    coverage: row.coverage,
+    advantageTitle: row.advantage_title,
+    advantageBody: row.advantage_body,
+    catalogUrl: row.catalog_url,
+    founderName: row.founder_name,
+    founderRole: row.founder_role,
+    founderNote: row.founder_note,
     address: row.address,
     phone: row.phone,
     email: row.email,

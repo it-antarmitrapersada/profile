@@ -1,82 +1,99 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Mail, MapPin, Phone } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
+import { Eyebrow } from "@/components/section";
 
 export default async function HomePage() {
-  const profile = await getProfile();
-
-  // Beranda memakai ulang `about` yang sama, dipotong di batas kalimat —
-  // tidak ada field khusus beranda yang harus diisi terpisah oleh admin.
-  const summary =
-    profile.about.length > 280
-      ? `${profile.about.slice(0, 280).replace(/\s+\S*$/, "")}…`
-      : profile.about;
+  const { vision, metrics, metricsAsOf, catalogUrl } = await getProfile();
 
   return (
     <>
-      <section className="relative isolate">
-        <Image
-          src="/warehouse.jpg"
-          alt=""
-          width={1920}
-          height={1080}
-          priority
-          className="absolute inset-0 -z-10 h-full w-full object-cover brightness-[0.35]"
-        />
-        <div className="mx-auto max-w-5xl px-6 py-28 text-white sm:py-36">
-          <h1 className="max-w-2xl text-4xl font-bold text-balance sm:text-5xl">
-            PT. Antar Mitra Persada
-          </h1>
-          <p className="mt-4 max-w-xl text-lg text-pretty text-white/80">
-            {profile.vision || "Mitra distribusi tepercaya bagi jaringan Anda."}
-          </p>
+      {/* Hero adalah tesis: kalimat paling khas yang perusahaan punya tentang
+          dirinya sendiri — visinya — dipasang sebagai pernyataan, bukan sebagai
+          subjudul di bawah foto stok. */}
+      <section className="mx-auto max-w-5xl px-6 pt-20 pb-16 sm:pt-32 sm:pb-20">
+        <Eyebrow className="rise">PT. Antar Mitra Persada</Eyebrow>
+        <h1
+          className="rise mt-6 max-w-[20ch] font-display text-[clamp(2.25rem,6vw,4.25rem)] leading-[1.02] font-bold tracking-[-0.03em] text-balance"
+          style={{ animationDelay: "60ms" }}
+        >
+          {vision || "Distribusi obat dan alat kesehatan berskala nasional."}
+        </h1>
+        {/* Katalog adalah aksi paling berharga di halaman ini: jalan langsung
+            dari "perusahaan ini meyakinkan" ke "saya bisa belanja sekarang".
+            Diberi bobot visual paling besar; sisanya dibiarkan tenang. */}
+        <div
+          className="rise mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 border-t pt-8"
+          style={{ animationDelay: "120ms" }}
+        >
+          {catalogUrl && (
+            <a
+              href={catalogUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="border border-primary px-5 py-3 font-mono text-[0.6875rem] tracking-[0.14em] text-primary uppercase transition-colors hover:bg-primary hover:text-primary-foreground"
+            >
+              Lihat Katalog INAPROC ↗
+            </a>
+          )}
           <Link
-            href="/about"
-            className={buttonVariants({ size: "lg", className: "mt-8" })}
+            href="/services"
+            className="font-mono text-[0.6875rem] tracking-[0.14em] text-muted-foreground uppercase underline-offset-8 hover:text-foreground hover:underline"
           >
-            Tentang Kami
+            Layanan Pengadaan →
           </Link>
         </div>
       </section>
 
-      {summary && (
-        <section className="mx-auto max-w-5xl px-6 py-16">
-          <h2 className="text-2xl font-semibold">Sekilas Perusahaan</h2>
-          <p className="mt-4 max-w-3xl text-pretty whitespace-pre-line text-muted-foreground">
-            {summary}
-          </p>
-          <Link
-            href="/about"
-            className="mt-4 inline-block text-sm font-medium underline underline-offset-4"
-          >
-            Selengkapnya
-          </Link>
+      {/* Bukti sebelum narasi: untuk pejabat pengadaan, angka instansi terlayani
+          lebih meyakinkan daripada kalimat apa pun tentang perusahaan. */}
+      {metrics.length > 0 && (
+        <section className="border-y bg-muted">
+          <div className="mx-auto max-w-5xl px-6 py-14">
+            <dl className="grid gap-10 sm:grid-cols-3">
+              {metrics.map((metric) => (
+                <div key={metric.label}>
+                  <dd className="font-display text-[clamp(2.25rem,5vw,3.25rem)] leading-none font-bold tracking-[-0.03em] text-primary">
+                    {metric.value}
+                  </dd>
+                  <dt className="mt-3 font-display text-sm font-semibold tracking-tight">
+                    {metric.label}
+                  </dt>
+                  {metric.note && (
+                    <p className="mt-1 font-body text-sm leading-snug text-muted-foreground">
+                      {metric.note}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </dl>
+            {metricsAsOf && (
+              /* Menyebut tanggalnya menaikkan kepercayaan, bukan menurunkan —
+                 angka tanpa keterangan waktu tidak bisa diperiksa siapa pun. */
+              <Eyebrow className="mt-10 border-t pt-4">
+                Data {metricsAsOf}
+              </Eyebrow>
+            )}
+          </div>
         </section>
       )}
 
-      <section className="border-t bg-muted/40">
-        <div className="mx-auto grid max-w-5xl gap-6 px-6 py-12 sm:grid-cols-3">
-          {[
-            { icon: MapPin, label: "Alamat", value: profile.address },
-            { icon: Phone, label: "Telepon", value: profile.phone },
-            { icon: Mail, label: "Email", value: profile.email },
-          ]
-            .filter((item) => item.value)
-            .map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex gap-3">
-                <Icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
-                <div>
-                  <p className="text-sm font-medium">{label}</p>
-                  <p className="text-sm whitespace-pre-line text-muted-foreground">
-                    {value}
-                  </p>
-                </div>
-              </div>
-            ))}
+      {/* Foto sebagai bukti, bukan pembuka — diberi keterangan seperti lampiran. */}
+      <figure className="pb-20">
+        <div className="relative aspect-21/9 w-full">
+          <Image
+            src="/warehouse.jpg"
+            alt="Gudang penyimpanan PT. Antar Mitra Persada"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover saturate-[0.85]"
+          />
         </div>
-      </section>
+        <figcaption className="mx-auto max-w-5xl px-6 pt-3">
+          <Eyebrow>Gudang penyimpanan</Eyebrow>
+        </figcaption>
+      </figure>
     </>
   );
 }

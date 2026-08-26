@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import {
   companyProfileSchema,
   coreValueSchema,
+  metricSchema,
 } from "../modules/company-profile/company-profile.dto";
 
 const valid = {
@@ -9,6 +10,15 @@ const valid = {
   vision: "",
   mission: [],
   coreValues: [],
+  metrics: [],
+  metricsAsOf: "",
+  coverage: [],
+  advantageTitle: "",
+  advantageBody: "",
+  catalogUrl: "",
+  founderName: "",
+  founderRole: "",
+  founderNote: "",
   address: "",
   phone: "",
   email: "",
@@ -25,21 +35,41 @@ test("poin misi kosong ditolak", () => {
   ).toBe(false);
 });
 
-test("core value wajib punya nama, deskripsi, dan ikon", () => {
+test("core value wajib punya nama dan deskripsi", () => {
   expect(
     coreValueSchema.safeParse({
-      name: "Integritas",
-      description: "Jujur dalam setiap transaksi.",
-      icon: "shield",
+      name: "Humanis",
+      description: "Menghargai dan peduli pada sesama.",
     }).success,
   ).toBe(true);
 
   expect(
     coreValueSchema.safeParse({
       name: "",
-      description: "Jujur dalam setiap transaksi.",
-      icon: "shield",
+      description: "Menghargai dan peduli pada sesama.",
     }).success,
+  ).toBe(false);
+});
+
+test("ikon tidak lagi jadi bagian core value — huruf awal yang dipakai", () => {
+  const parsed = coreValueSchema.parse({
+    name: "Empati",
+    description: "Merasakan dan memahami perasaan orang lain.",
+    icon: "handshake",
+  });
+
+  expect(parsed).not.toHaveProperty("icon");
+});
+
+test("metric wajib punya label dan angka, keterangan boleh kosong", () => {
+  expect(
+    metricSchema.safeParse({ label: "Rumah Sakit", value: "120+", note: "" })
+      .success,
+  ).toBe(true);
+
+  expect(
+    metricSchema.safeParse({ label: "Rumah Sakit", value: "", note: "" })
+      .success,
   ).toBe(false);
 });
 
@@ -68,5 +98,21 @@ test("URL peta boleh kosong tapi tidak boleh asal", () => {
   ).toBe(true);
   expect(
     companyProfileSchema.safeParse({ ...valid, mapsEmbedUrl: "maps" }).success,
+  ).toBe(false);
+});
+
+test("tautan katalog boleh kosong tapi tidak boleh asal", () => {
+  expect(companyProfileSchema.safeParse({ ...valid, catalogUrl: "" }).success).toBe(
+    true,
+  );
+  expect(
+    companyProfileSchema.safeParse({
+      ...valid,
+      catalogUrl: "https://katalog.inaproc.id/antar-mitra-persada",
+    }).success,
+  ).toBe(true);
+  expect(
+    companyProfileSchema.safeParse({ ...valid, catalogUrl: "katalog.inaproc.id" })
+      .success,
   ).toBe(false);
 });

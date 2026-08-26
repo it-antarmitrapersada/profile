@@ -2108,18 +2108,27 @@ model pg_users {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model company_profile {
-  id             Int      @id @default(1) @db.SmallInt
-  about          String   @default("")
-  vision         String   @default("")
-  mission        Json     @default("[]")
-  core_values    Json     @default("[]")
-  address        String   @default("")
-  phone          String   @default("")
-  email          String   @default("")
-  maps_embed_url String   @default("")
-  updated_at     DateTime @default(now()) @db.Timestamptz(6)
-  updated_by     String?  @db.Uuid
-  users          users?   @relation(fields: [updated_by], references: [id], onUpdate: NoAction)
+  id              Int      @id @default(1) @db.SmallInt
+  about           String   @default("")
+  vision          String   @default("")
+  mission         Json     @default("[]")
+  core_values     Json     @default("[]")
+  address         String   @default("")
+  phone           String   @default("")
+  email           String   @default("")
+  maps_embed_url  String   @default("")
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_by      String?  @db.Uuid
+  metrics         Json     @default("[]")
+  metrics_as_of   String   @default("")
+  coverage        Json     @default("[]")
+  advantage_title String   @default("")
+  advantage_body  String   @default("")
+  founder_name    String   @default("")
+  founder_role    String   @default("")
+  founder_note    String   @default("")
+  catalog_url     String   @default("")
+  users           users?   @relation(fields: [updated_by], references: [id], onUpdate: NoAction)
 
   @@schema("cms")
 }

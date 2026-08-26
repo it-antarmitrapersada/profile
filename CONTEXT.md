@@ -23,10 +23,32 @@ paragraf utuh, bisa juga terpecah menjadi beberapa poin terurut — keduanya
 Mission yang sama, hanya beda tingkat rincian. Saat terpecah, urutannya
 bermakna; poin tanpa isi bukan poin.
 
-**Core Value** — prinsip bernama dengan penjelasan singkat. Ada beberapa,
-terurut, dan masing-masing berdiri sendiri. Berbeda dari Mission: Mission
-adalah yang perusahaan *lakukan*, Core Value adalah yang perusahaan
-*pegang*.
+**Core Value** — prinsip bernama dengan penjelasan singkat. Berbeda dari
+Mission: Mission adalah yang perusahaan *lakukan*, Core Value adalah yang
+perusahaan *pegang*. Urutannya mengabarkan sesuatu — huruf awal setiap nilai,
+dibaca berurutan, membentuk akronim perusahaan. Mengganti nama, menukar
+urutan, atau menghapus satu nilai mengubah kata itu.
+
+**Metric** — jumlah instansi yang telah dilayani, selalu disertai keterangan
+kapan angka itu berlaku. Klaim yang menua: keterangan waktu adalah bagian
+dari maknanya, bukan hiasan. Angka tanpa tanggal tidak bisa diperiksa siapa
+pun.
+
+**Coverage** — wilayah tempat perusahaan melayani pelanggan. Daftar sebutan
+wilayah sebagaimana perusahaan menyebutnya, bukan pembagian administratif.
+
+**Advantage** — pembeda yang bisa diperiksa oleh calon pembeli. Kalimat yang
+bisa diucapkan pesaing mana pun tanpa menjadi bohong bukan Advantage.
+
+**Catalog** — etalase perusahaan di e-Katalog pemerintah, tempat Procurement
+Officer benar-benar membelanjakan anggarannya. Satu-satunya tautan di Public
+site yang membawa pembaca keluar menuju transaksi; karena itu ia mendapat
+bobot visual terbesar, dan tidak berbagi bobot itu dengan tautan lain.
+
+**Procurement Officer** — pembaca utama Public site: pejabat pembuat komitmen
+dan pokja pemilihan di rumah sakit, dinas kesehatan, dan puskesmas yang
+sedang mencari penyedia di e-Katalog. Setiap keputusan tentang apa yang tampil
+lebih dulu diputuskan dari sudut pandang orang ini.
 
 **CMS Admin** — orang yang berhak mengubah Company Profile. Peran ini milik
 website, bukan turunan jabatan di sistem internal: menjadi admin di sistem
