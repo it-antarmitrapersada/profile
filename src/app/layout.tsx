@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     default: "PT. Antar Mitra Persada",
     template: "%s | PT. Antar Mitra Persada",
   },
+  verification: {
+    google: "FFZBqsPV3PPikCpEp_bBQjlks3oWVUFKQZ4O9FhKqlA",
+  },
   description:
     "Profil PT. Antar Mitra Persada \u2014 visi, misi, nilai perusahaan, dan informasi kontak.",
   openGraph: {
@@ -75,7 +78,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
         />
         <TanstackQueryProvider>{children}</TanstackQueryProvider>
       </body>
