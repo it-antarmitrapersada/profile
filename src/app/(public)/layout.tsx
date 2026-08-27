@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { LayoutDashboard, Mail, MapPin, Phone } from "lucide-react";
 import { NavLink } from "@/components/nav-link";
 import { telHref } from "@/lib/utils";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,9 @@ const Wordmark = () => (
 
 export default async function PublicLayout({ children }: LayoutProps<"/">) {
   const { address, phone, email, catalogUrl } = await getProfile();
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
 
   return (
     <>
@@ -42,12 +46,23 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
           <Wordmark />
           {/* Mobile: CTA sebaris dengan wordmark, nav turun ke baris kedua —
               dua baris, bukan tiga. Desktop: wordmark · nav · CTA sebaris. */}
-          <Link
-            href="/contact"
-            className="order-2 ml-auto rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:order-3 sm:ml-0"
-          >
-            Hubungi Kami
-          </Link>
+          <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0">
+            {claims && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-colors hover:bg-muted"
+              >
+                <LayoutDashboard className="size-4" aria-hidden />
+                Dashboard
+              </Link>
+            )}
+            <Link
+              href="/contact"
+              className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Hubungi Kami
+            </Link>
+          </div>
           <ul className="order-3 flex w-full flex-wrap items-center gap-x-6 gap-y-2 sm:order-2 sm:ml-auto sm:w-auto">
             {NAV.map((item) => (
               <li key={item.href}>

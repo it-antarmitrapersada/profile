@@ -2120,7 +2120,6 @@ model company_profile {
   updated_at      DateTime @default(now()) @db.Timestamptz(6)
   updated_by      String?  @db.Uuid
   metrics         Json     @default("[]")
-  metrics_as_of   String   @default("")
   coverage        Json     @default("[]")
   advantage_title String   @default("")
   advantage_body  String   @default("")
@@ -2131,6 +2130,7 @@ model company_profile {
   pbf_license_no  String   @default("")
   cdob_cert_no    String   @default("")
   business_id_no  String   @default("")
+  total_customers String   @default("")
   users           users?   @relation(fields: [updated_by], references: [id], onUpdate: NoAction)
 
   @@schema("cms")
