@@ -1,8 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { signOutAction } from "../sign-out/sign-out.action";
 
 export const SignOutButton = () => (
-  <Button onClick={() => signOutAction()}>Logout</Button>
+  <button
+    type="button"
+    onClick={() => signOutAction()}
+    className="rounded-md px-1 py-1 text-xs text-subtle transition-colors hover:text-foreground"
+  >
+    Keluar
+  </button>
 );

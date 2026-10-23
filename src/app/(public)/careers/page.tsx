@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
+import { listOpenJobs } from "@/modules/careers/careers.service";
+import { formatDate } from "@/modules/careers/careers.dto";
 import {
   Eyebrow,
   HeroAction,
   PageHero,
+  PrimaryLink,
   ValueGrid,
 } from "@/components/section";
 
@@ -13,15 +16,62 @@ export const metadata: Metadata = {
 };
 
 export default async function CareersPage() {
-  const { coreValues } = await getProfile();
+  const [{ coreValues, careersFormUrl }, jobs] = await Promise.all([
+    getProfile(),
+    listOpenJobs(),
+  ]);
 
   return (
     <>
-      {/* ponytail: tombol "Isi formulir lamaran ↗" menunggu kolom
-          `careers_form_url` di CMS — tanpa URL asli, tidak ada tombol. */}
       <PageHero eyebrow="Karir" title="Bekerja bersama kami di Sukoharjo.">
-        <HeroAction text="Lamaran untuk seluruh posisi diterima melalui formulir daring. Tim kami akan menghubungi kandidat yang sesuai." />
+        <HeroAction text="Lamaran untuk seluruh posisi diterima melalui formulir daring. Tim kami akan menghubungi kandidat yang sesuai.">
+          {careersFormUrl && (
+            <PrimaryLink href={careersFormUrl}>Isi formulir lamaran ↗</PrimaryLink>
+          )}
+        </HeroAction>
       </PageHero>
+
+      {jobs.length > 0 && (
+        <section className="wrap pb-[clamp(64px,9vw,112px)]">
+          <Eyebrow className="mb-2">Lowongan dibuka</Eyebrow>
+          <ul className="border-t border-foreground">
+            {jobs.map((job) => {
+              const applyUrl = job.applyUrl || careersFormUrl;
+              const points = job.description
+                .split("\n")
+                .map((line) => line.trim())
+                .filter(Boolean);
+              return (
+                <li
+                  key={job.id}
+                  className="flex flex-wrap items-start justify-between gap-x-12 gap-y-5 border-b py-7"
+                >
+                  <div className="flex max-w-[720px] flex-col gap-1.5">
+                    <h2 className="text-2xl font-medium tracking-[-0.01em]">
+                      {job.title}
+                    </h2>
+                    <p className="text-[15px] text-muted-foreground">
+                      {[job.location, job.type].filter(Boolean).join(" · ")}
+                      {job.deadline &&
+                        ` — batas lamaran ${formatDate(job.deadline)}`}
+                    </p>
+                    {points.length > 0 && (
+                      <ul className="mt-3 list-disc space-y-1 pl-5 leading-relaxed text-body">
+                        {points.map((point) => (
+                          <li key={point}>{point}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  {applyUrl && (
+                    <PrimaryLink href={applyUrl}>Lamar ↗</PrimaryLink>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       {coreValues.length > 0 && (
         <section className="wrap pb-[clamp(80px,11vw,140px)]">

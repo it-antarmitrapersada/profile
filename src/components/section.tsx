@@ -194,14 +194,15 @@ export const ValueGrid = ({
 export const paragraphs = (text: string) =>
   text.split(/\n\s*\n/).filter((para) => para.trim());
 
-// ponytail: placeholder sampai kolom `whatsapp`, `instagram_url`,
-// `linkedin_url` ada di CMS — ganti nilai di sini, lalu pindahkan ke
-// getProfile(). PRODUCT.md masih menyatakan WhatsApp tidak dipakai.
-export const WHATSAPP = {
-  label: "08xx-xxxx-xxxx",
-  href: "https://wa.me/628XXXXXXXXXX",
-};
-export const SOCIALS = [
-  { label: "Instagram", href: "https://instagram.com/GANTI-USERNAME" },
-  { label: "LinkedIn", href: "https://linkedin.com/company/GANTI-USERNAME" },
-];
+/** Media sosial yang terisi di CMS; kolom kosong tidak tayang. */
+export const socialLinks = ({
+  instagramUrl,
+  linkedinUrl,
+}: {
+  instagramUrl: string;
+  linkedinUrl: string;
+}) =>
+  [
+    { label: "Instagram", href: instagramUrl },
+    { label: "LinkedIn", href: linkedinUrl },
+  ].filter((social) => social.href);

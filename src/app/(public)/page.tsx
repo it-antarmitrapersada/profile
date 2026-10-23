@@ -60,26 +60,26 @@ export default async function HomePage() {
       </PageHero>
 
       <div className="wrap">
-        <div className="relative h-[clamp(260px,40vw,520px)]">
+        <div className="relative aspect-video min-h-[240px] w-full">
           <Image
-            src="/warehouse.jpg"
-            alt="Gudang PT. Antar Mitra Persada"
+            src="/tim-midyear-2025.webp"
+            alt="Tim PT. Antar Mitra Persada, Mid-Year Meeting 2025"
             fill
             priority
             sizes="(max-width: 1280px) 100vw, 1120px"
-            className="rounded-[4px] object-cover"
+            className="rounded-[4px] object-cover object-[center_85%]"
           />
         </div>
       </div>
 
       {stats.length > 0 && (
-        <dl className="wrap grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-12 gap-y-10 py-[clamp(56px,8vw,96px)]">
+        <dl className="wrap grid grid-cols-[repeat(auto-fit,minmax(min(100%,140px),1fr))] gap-x-8 gap-y-9 py-[clamp(56px,8vw,96px)]">
           {stats.map((stat) => (
             <div key={stat.label} className="flex flex-col-reverse gap-2">
               <dt className="text-[15px] text-muted-foreground">
                 {stat.label}
               </dt>
-              <dd className="text-[clamp(40px,4.4vw,52px)] font-medium tracking-[-0.03em]">
+              <dd className="text-[clamp(36px,4.4vw,52px)] font-medium tracking-[-0.03em]">
                 {stat.value}
               </dd>
             </div>
@@ -92,9 +92,9 @@ export default async function HomePage() {
         <div className="wrap">
           <dl className="flex flex-wrap gap-x-14 gap-y-5 border-y py-7 text-sm">
             {credentials.map((item) => (
-              <div key={item.label} className="flex flex-col gap-1">
+              <div key={item.label} className="flex min-w-0 flex-col gap-1">
                 <dt className="text-faint">{item.label}</dt>
-                <dd className="font-mono">{item.value}</dd>
+                <dd className="font-mono wrap-anywhere">{item.value}</dd>
               </div>
             ))}
           </dl>
@@ -117,7 +117,7 @@ export default async function HomePage() {
 
       {aboutLead && (
         <section className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] bg-muted">
-          <div className="relative min-h-[360px] max-h-[600px]">
+          <div className="relative aspect-4/3 max-h-[600px] min-h-[260px] w-full">
             <Image
               src="/graha-berseri.jpg"
               alt="Graha Berseri, Sukoharjo"
@@ -144,9 +144,9 @@ export default async function HomePage() {
       {coverage.length > 0 && (
         <section className="wrap split py-[clamp(80px,11vw,140px)]">
           <H2>Jangkauan wilayah</H2>
-          <ul className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-x-10">
+          <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,130px),1fr))] gap-x-6">
             {coverage.map((area) => (
-              <li key={area} className="border-b py-4 text-lg">
+              <li key={area} className="border-b py-3.5 text-[clamp(16px,1.6vw,18px)]">
                 {area}
               </li>
             ))}

@@ -50,6 +50,11 @@ export const companyProfileSchema = z.object({
   // kosong = belum diisi; selain itu harus alamat yang valid
   email: z.union([z.email("Email tidak valid"), z.literal("")]),
   mapsEmbedUrl: z.union([z.url("URL peta tidak valid"), z.literal("")]),
+  // Kosong = tidak tayang. Tanpa WhatsApp — situs tidak memakainya.
+  instagramUrl: z.union([z.url("URL Instagram tidak valid"), z.literal("")]),
+  linkedinUrl: z.union([z.url("URL LinkedIn tidak valid"), z.literal("")]),
+  // Fallback tombol lamaran saat lowongan tidak punya link sendiri.
+  careersFormUrl: z.union([z.url("URL formulir tidak valid"), z.literal("")]),
 });
 
 export type CoreValue = z.infer<typeof coreValueSchema>;

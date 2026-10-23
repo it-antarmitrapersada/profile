@@ -1,31 +1,29 @@
-import Link from "next/link";
+import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/modules/auth/require-admin";
-import { SignOutButton } from "@/modules/auth/components/signout-button";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
-  await requireAdmin();
+  const { email } = await requireAdmin();
+  const [photoCount, openJobCount] = await Promise.all([
+    prisma.gallery_items.count(),
+    prisma.job_openings.count({ where: { is_open: true } }),
+  ]);
 
   return (
-    <>
-      <header className="border-b">
-        <div className="mx-auto flex max-w-3xl items-center gap-4 px-6 py-4">
-          <span className="font-semibold">Admin Konten</span>
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-          >
-            Lihat situs
-          </Link>
-          <div className="ml-auto">
-            <SignOutButton />
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
+    <SidebarProvider className="text-sm">
+      <AdminSidebar
+        email={email}
+        photoCount={photoCount}
+        openJobCount={openJobCount}
+      />
+      <SidebarInset className="min-w-0 md:border md:border-[#eceeed] md:peer-data-[variant=inset]:rounded-xl">
         {children}
-      </main>
-    </>
+      </SidebarInset>
+      <Toaster position="bottom-right" />
+    </SidebarProvider>
   );
 }

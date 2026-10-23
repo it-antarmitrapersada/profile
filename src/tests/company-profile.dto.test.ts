@@ -26,6 +26,9 @@ const valid = {
   phone: "",
   email: "",
   mapsEmbedUrl: "",
+  instagramUrl: "",
+  linkedinUrl: "",
+  careersFormUrl: "",
 };
 
 test("profil kosong itu sah — baris dibuat dengan default kosong", () => {

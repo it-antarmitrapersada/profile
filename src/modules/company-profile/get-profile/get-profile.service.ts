@@ -40,5 +40,8 @@ export const getProfile = cache(async (): Promise<CompanyProfile> => {
     phone: row.phone,
     email: row.email,
     mapsEmbedUrl: row.maps_embed_url,
+    instagramUrl: row.instagram_url,
+    linkedinUrl: row.linkedin_url,
+    careersFormUrl: row.careers_form_url,
   });
 });
