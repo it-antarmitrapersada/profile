@@ -5,6 +5,7 @@ import { listGallery } from "@/modules/gallery/gallery.service";
 import { CtaBand, PageHero } from "@/components/section";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/gallery" },
   title: "Galeri",
   description: "Foto kantor, tim, dan kegiatan PT. Antar Mitra Persada.",
 };

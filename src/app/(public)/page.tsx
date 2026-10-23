@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
 import {
@@ -8,6 +9,14 @@ import {
   TextLink,
   paragraphs,
 } from "@/components/section";
+
+export const metadata: Metadata = {
+  title: {
+    absolute:
+      "PT. Antar Mitra Persada \u2014 Pedagang Besar Farmasi & Distributor Alat Kesehatan",
+  },
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   const {
@@ -59,7 +68,8 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,26,20,0.25)_0%,rgba(8,26,20,0.7)_35%,rgba(8,26,20,0.92)_100%)]" />
         <div className="wrap relative flex w-full flex-col gap-[clamp(16px,2.6vh,28px)] pt-[clamp(72px,22vh,280px)] pb-[clamp(20px,4vh,48px)]">
           <p className="rise text-sm font-medium text-[#e3f1ea]">
-            Pedagang Besar Farmasi & Distributor Alat Kesehatan
+            PT. Antar Mitra Persada — Pedagang Besar Farmasi & Distributor
+            Alat Kesehatan
           </p>
           <h1
             className="rise max-w-[860px] text-[clamp(34px,min(4.6vw,7vh),60px)] leading-[1.06] font-medium tracking-[-0.03em] text-balance"

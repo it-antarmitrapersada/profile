@@ -11,6 +11,7 @@ import {
 } from "@/components/section";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/careers" },
   title: "Karir",
   description: "Bekerja bersama PT. Antar Mitra Persada di Sukoharjo.",
 };

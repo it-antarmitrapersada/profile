@@ -6,6 +6,9 @@ import { TanstackQueryProvider } from "@/components/providers/tanstack-query.pro
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
 
 const SITE_URL = "https://profile.ampersada.com";
+const SITE_NAME = "PT. Antar Mitra Persada";
+const DESCRIPTION =
+  "PT. Antar Mitra Persada \u2014 Pedagang Besar Farmasi (PBF) dan distributor obat, BMHP, serta alat kesehatan di Sukoharjo, Jawa Tengah, tersedia di e-Katalog INAPROC.";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -29,38 +32,51 @@ export const metadata: Metadata = {
   verification: {
     google: "FFZBqsPV3PPikCpEp_bBQjlks3oWVUFKQZ4O9FhKqlA",
   },
-  description:
-    "Profil PT. Antar Mitra Persada \u2014 visi, misi, nilai perusahaan, dan informasi kontak.",
+  description: DESCRIPTION,
   openGraph: {
     type: "website",
     locale: "id_ID",
     siteName: "PT. Antar Mitra Persada",
     title: "PT. Antar Mitra Persada",
-    description:
-      "Profil PT. Antar Mitra Persada \u2014 visi, misi, nilai perusahaan, dan informasi kontak.",
+    description: DESCRIPTION,
     images: ["/logo.jpeg"],
   },
   twitter: {
     card: "summary",
     title: "PT. Antar Mitra Persada",
-    description:
-      "Profil PT. Antar Mitra Persada \u2014 visi, misi, nilai perusahaan, dan informasi kontak.",
+    description: DESCRIPTION,
     images: ["/logo.jpeg"],
   },
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { address, phone, email } = await getProfile();
+  const { address, phone, email, instagramUrl, linkedinUrl } =
+    await getProfile();
+  const sameAs = [instagramUrl, linkedinUrl].filter(Boolean);
 
-  const organizationJsonLd = {
+  // WebSite memberi Google nama situs; tanpanya hasil pencarian menampilkan
+  // domain ("ampersada.com").
+  const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "PT. Antar Mitra Persada",
-    url: SITE_URL,
-    logo: `${SITE_URL}/logo.jpeg`,
-    ...(address && { address }),
-    ...(phone && { telephone: phone }),
-    ...(email && { email }),
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: SITE_NAME,
+        alternateName: ["Antar Mitra Persada", "AMP Persada"],
+        url: `${SITE_URL}/`,
+      },
+      {
+        "@type": "Organization",
+        name: SITE_NAME,
+        alternateName: "Antar Mitra Persada",
+        url: SITE_URL,
+        logo: `${SITE_URL}/logo.jpeg`,
+        ...(address && { address }),
+        ...(phone && { telephone: phone }),
+        ...(email && { email }),
+        ...(sameAs.length > 0 && { sameAs }),
+      },
+    ],
   };
 
   return (
@@ -78,7 +94,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationJsonLd),
+            __html: JSON.stringify(jsonLd),
           }}
         />
         <TanstackQueryProvider>{children}</TanstackQueryProvider>
