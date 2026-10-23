@@ -1,74 +1,93 @@
 import type { Metadata } from "next";
-import { Mail, MapPin, Phone } from "lucide-react";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
 import { telHref } from "@/lib/utils";
-import { Chip } from "@/components/section";
+import {
+  PageHero,
+  PrimaryLink,
+  SOCIALS,
+  WHATSAPP,
+} from "@/components/section";
 
 export const metadata: Metadata = {
-  title: "Kontak | PT. Antar Mitra Persada",
+  title: "Kontak",
   description: "Alamat, telepon, dan surel PT. Antar Mitra Persada.",
 };
 
 export default async function ContactPage() {
-  const { address, phone, email, mapsEmbedUrl } = await getProfile();
+  const { address, phone, email, mapsEmbedUrl, catalogUrl } =
+    await getProfile();
 
-  const cards = [
-    { icon: MapPin, label: "Alamat", value: address, href: undefined },
-    { icon: Phone, label: "Telepon", value: phone, href: telHref(phone) },
-    { icon: Mail, label: "Surel", value: email, href: `mailto:${email}` },
-  ].filter((card) => card.value);
+  const rows = [
+    { label: "Alamat", value: address, href: undefined },
+    { label: "Telepon", value: phone, href: telHref(phone) },
+    { label: "WhatsApp", value: WHATSAPP.label, href: WHATSAPP.href },
+    { label: "Surel", value: email, href: `mailto:${email}` },
+  ].filter((row) => row.value);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
-      <Chip>Hubungi Kami</Chip>
-      <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
-        Kontak
-      </h1>
+    <>
+      <PageHero eyebrow="Hubungi kami" title="Kontak" />
 
-      {cards.length > 0 ? (
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          {cards.map(({ icon: Icon, label, value, href }) => (
-            <div
-              key={label}
-              className="rounded-2xl border bg-background p-6 shadow-sm"
-            >
-              <span
-                aria-hidden
-                className="grid size-11 place-items-center rounded-full bg-accent text-primary"
-              >
-                <Icon className="size-5" />
-              </span>
-              <h2 className="mt-4 font-semibold">{label}</h2>
-              <p className="mt-1 text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
-                {href ? (
-                  <a
-                    href={href}
-                    className="underline-offset-4 hover:text-foreground hover:underline"
-                  >
-                    {value}
-                  </a>
-                ) : (
-                  value
-                )}
-              </p>
-            </div>
-          ))}
+      <div className="wrap grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] gap-x-20 gap-y-12 pb-[clamp(80px,11vw,140px)]">
+        <div>
+          {rows.length > 0 ? (
+            <dl className="border-t border-foreground">
+              {rows.map(({ label, value, href }) => (
+                <div key={label} className="flex flex-col gap-2 border-b py-6">
+                  <dt className="text-sm text-faint">{label}</dt>
+                  <dd className="text-lg leading-normal whitespace-pre-line">
+                    {href ? (
+                      <a
+                        href={href}
+                        className="transition-colors hover:text-primary"
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      value
+                    )}
+                  </dd>
+                </div>
+              ))}
+              <div className="flex flex-col gap-2 border-b py-6">
+                <dt className="text-sm text-faint">Media sosial</dt>
+                <dd className="flex flex-wrap gap-6 text-lg">
+                  {SOCIALS.map((social) => (
+                    <a
+                      key={social.label}
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener"
+                      className="transition-colors hover:text-primary"
+                    >
+                      {social.label} ↗
+                    </a>
+                  ))}
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="text-lg text-muted-foreground">
+              Informasi kontak belum tersedia.
+            </p>
+          )}
+          {catalogUrl && (
+            <PrimaryLink href={catalogUrl} className="mt-8">
+              Buka Katalog INAPROC ↗
+            </PrimaryLink>
+          )}
         </div>
-      ) : (
-        <p className="mt-10 max-w-[52ch] leading-relaxed text-muted-foreground">
-          Informasi kontak belum tersedia.
-        </p>
-      )}
 
-      {mapsEmbedUrl && (
-        <iframe
-          src={mapsEmbedUrl}
-          title="Peta lokasi kantor"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className="mt-10 aspect-video w-full rounded-3xl border"
-        />
-      )}
-    </div>
+        {mapsEmbedUrl && (
+          <iframe
+            src={mapsEmbedUrl}
+            title="Peta lokasi kantor"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="h-full min-h-[440px] w-full rounded-[4px] border-0 bg-muted"
+          />
+        )}
+      </div>
+    </>
   );
 }
