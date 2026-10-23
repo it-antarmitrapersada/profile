@@ -4,9 +4,11 @@ import { NavLink } from "@/components/nav-link";
 import { SOCIALS, WHATSAPP } from "@/components/section";
 import { telHref } from "@/lib/utils";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
-import { createClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
+// Statis + revalidatePath saat admin menyimpan, jadi perpindahan halaman
+// tidak menunggu database. Jam ini hanya jaring pengaman untuk perubahan
+// yang tidak lewat /admin (SQL manual).
+export const revalidate = 3600;
 
 const NAV = [
   { href: "/", label: "Beranda" },
@@ -21,9 +23,6 @@ const FOOTER_LINK = "transition-colors hover:text-foreground";
 
 export default async function PublicLayout({ children }: LayoutProps<"/">) {
   const { address, phone, email, catalogUrl } = await getProfile();
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims;
 
   return (
     <>
@@ -46,14 +45,6 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
             {NAV.map((item) => (
               <NavLink key={item.href} href={item.href} label={item.label} />
             ))}
-            {claims && (
-              <Link
-                href="/admin"
-                className="font-medium text-primary transition-colors hover:text-primary-hover"
-              >
-                Dashboard
-              </Link>
-            )}
           </nav>
         </div>
       </header>

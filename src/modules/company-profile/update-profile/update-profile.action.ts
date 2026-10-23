@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/modules/auth/require-admin";
 import { companyProfileSchema } from "../company-profile.dto";
 import { updateProfile } from "./update-profile.service";
@@ -15,4 +16,6 @@ export const updateProfileAction = async (input: unknown) => {
   }
 
   await updateProfile(parsed.data, userId);
+  // Halaman publik statis — buang cache-nya supaya perubahan langsung tayang.
+  revalidatePath("/", "layout");
 };
