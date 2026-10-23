@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
 import { listOpenJobs } from "@/modules/careers/careers.service";
-import { formatDate } from "@/modules/careers/careers.dto";
+import { flyerUrl, formatDate } from "@/modules/careers/careers.dto";
 import {
   Eyebrow,
   HeroAction,
@@ -47,6 +48,23 @@ export default async function CareersPage() {
                   key={job.id}
                   className="flex flex-wrap items-start justify-between gap-x-12 gap-y-5 border-b py-7"
                 >
+                  {job.flyer && (
+                    <a
+                      href={flyerUrl(job.flyer)}
+                      target="_blank"
+                      rel="noopener"
+                      className="w-full sm:w-48"
+                    >
+                      <Image
+                        src={flyerUrl(job.flyer)}
+                        alt={`Flyer lowongan ${job.title}`}
+                        width={384}
+                        height={480}
+                        sizes="(min-width: 640px) 192px, 100vw"
+                        className="h-auto w-full rounded-lg border"
+                      />
+                    </a>
+                  )}
                   <div className="flex max-w-[720px] flex-col gap-1.5">
                     <h2 className="text-2xl font-medium tracking-[-0.01em]">
                       {job.title}
