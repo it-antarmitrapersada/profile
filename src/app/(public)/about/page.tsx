@@ -10,6 +10,7 @@ import {
 } from "@/components/section";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/about" },
   title: "Tentang Kami",
   description:
     "Profil, visi, misi, dan nilai perusahaan PT. Antar Mitra Persada.",

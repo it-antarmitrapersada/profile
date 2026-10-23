@@ -3,6 +3,7 @@ import { getProfile } from "@/modules/company-profile/get-profile/get-profile.se
 import { CtaBand, H2, PageHero, paragraphs } from "@/components/section";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/services" },
   title: "Layanan",
   description:
     "Pengadaan obat, BMHP, dan alat kesehatan melalui LPSE dan e-Katalog INAPROC dengan sistem satu pintu.",

@@ -4,6 +4,7 @@ import { telHref } from "@/lib/utils";
 import { PageHero, PrimaryLink, socialLinks } from "@/components/section";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/contact" },
   title: "Kontak",
   description: "Alamat, telepon, dan surel PT. Antar Mitra Persada.",
 };
