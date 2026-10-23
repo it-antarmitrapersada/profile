@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export const FLYER_BUCKET = "job-flyers";
+export const FLYER_MAX_BYTES = 5 * 1024 * 1024;
+export const FLYER_TYPES = ["image/jpeg", "image/png"];
+
+/** Path objek flyer di bucket. */
+export const flyerUrl = (path: string) =>
+  `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${FLYER_BUCKET}/${path}`;
+
 export const JOB_TYPES = ["Penuh waktu", "Kontrak", "Magang"] as const;
 
 export const jobSchema = z.object({
@@ -10,6 +18,11 @@ export const jobSchema = z.object({
   deadline: z.union([z.iso.date("Tanggal tidak valid"), z.literal("")]),
   description: z.string(),
   applyUrl: z.union([z.url("Link lamaran tidak valid"), z.literal("")]),
+  // "" = tanpa flyer; selain itu nama objek hasil unggahan admin (uuid.ext)
+  flyer: z.union([
+    z.string().regex(/^[\w-]+\.(jpe?g|png)$/, "Nama berkas tidak valid"),
+    z.literal(""),
+  ]),
 });
 
 export const saveJobSchema = z.object({

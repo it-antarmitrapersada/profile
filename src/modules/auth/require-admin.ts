@@ -20,10 +20,10 @@ export const requireAdmin = async () => {
     redirect("/login");
   }
 
-  const account = await prisma.pg_users.findUnique({
-    where: { id: user.id },
-    select: { role: true },
-  });
+  // pg_users milik ERP (schema public) sengaja tidak di-introspect Prisma.
+  const [account] = await prisma.$queryRaw<{ role: string[] }[]>`
+    select role from public.pg_users where id = ${user.id}::uuid
+  `;
 
   if (!account?.role.some((role) => ADMIN_ROLES.includes(role))) {
     redirect("/");

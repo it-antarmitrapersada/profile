@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,11 +32,16 @@ import {
 } from "@/components/ui/table";
 import { AdminPage, AdminSection } from "@/components/admin/admin-page";
 import { useAdminMutation } from "@/hooks/use-admin-mutation";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import type { CompanyProfile } from "@/modules/company-profile/company-profile.dto";
 import { updateProfileAction } from "@/modules/company-profile/update-profile/update-profile.action";
 import {
+  FLYER_BUCKET,
+  FLYER_MAX_BYTES,
+  FLYER_TYPES,
   JOB_TYPES,
+  flyerUrl,
   formatDate,
   type Job,
   type JobInput,
@@ -53,6 +59,7 @@ const EMPTY_JOB: JobInput = {
   deadline: "",
   description: "",
   applyUrl: "",
+  flyer: "",
 };
 
 const SMALL = "h-7 rounded-full px-2.5 text-xs";
@@ -68,7 +75,31 @@ export function JobsManager({
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<JobInput>(EMPTY_JOB);
   const [formUrl, setFormUrl] = useState(profile.careersFormUrl);
-  const save = useAdminMutation(saveJobAction, "Lowongan disimpan");
+  // flyer baru: berkas lokal + URL pratinjau, diunggah saat Simpan
+  const [flyerFile, setFlyerFile] = useState<{ file: File; url: string } | null>(
+    null,
+  );
+  const save = useAdminMutation(
+    async ({ id, job, file }: { id: number | null; job: JobInput; file?: File }) => {
+      if (!file) return saveJobAction({ id, job });
+
+      // Langsung ke Storage dari browser (batas body Vercel), sama seperti galeri.
+      const supabase = createClient();
+      const path = `${crypto.randomUUID()}.${file.type === "image/png" ? "png" : "jpg"}`;
+      const { error } = await supabase.storage
+        .from(FLYER_BUCKET)
+        .upload(path, file, { contentType: file.type });
+      if (error) throw new Error(error.message);
+      try {
+        await saveJobAction({ id, job: { ...job, flyer: path } });
+      } catch (cause) {
+        // jangan tinggalkan berkas yatim di bucket
+        await supabase.storage.from(FLYER_BUCKET).remove([path]);
+        throw cause;
+      }
+    },
+    "Lowongan disimpan",
+  );
   const toggle = useAdminMutation(setJobOpenAction, "Status diperbarui");
   const remove = useAdminMutation(deleteJobAction, "Lowongan dihapus");
   const saveFormUrl = useAdminMutation(updateProfileAction, "Link formulir disimpan");
@@ -76,7 +107,19 @@ export function JobsManager({
   const startEdit = (job: Job | null) => {
     setEditing(job?.id ?? null);
     setDraft(job ?? EMPTY_JOB);
+    pickFlyer(null);
     setOpen(true);
+  };
+
+  const pickFlyer = (file: File | null) => {
+    if (file && !FLYER_TYPES.includes(file.type)) {
+      return toast.error("Flyer hanya JPG atau PNG");
+    }
+    if (file && file.size > FLYER_MAX_BYTES) {
+      return toast.error("Flyer lebih dari 5 MB");
+    }
+    if (flyerFile) URL.revokeObjectURL(flyerFile.url);
+    setFlyerFile(file && { file, url: URL.createObjectURL(file) });
   };
 
   const field = (key: Exclude<keyof JobInput, "type">) => ({
@@ -221,7 +264,7 @@ export function JobsManager({
             onSubmit={(event) => {
               event.preventDefault();
               save.mutate(
-                { id: editing, job: draft },
+                { id: editing, job: draft, file: flyerFile?.file },
                 { onSuccess: () => setOpen(false) },
               );
             }}
@@ -281,6 +324,45 @@ export function JobsManager({
                   rows={7}
                   placeholder="Satu poin per baris"
                 />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="job-flyer">
+                  Flyer{" "}
+                  <span className="font-normal text-subtle">
+                    (opsional, JPG/PNG maks. 5 MB)
+                  </span>
+                </Label>
+                {(flyerFile || draft.flyer) && (
+                  // eslint-disable-next-line @next/next/no-img-element -- pratinjau blob lokal
+                  <img
+                    src={flyerFile?.url ?? flyerUrl(draft.flyer)}
+                    alt="Pratinjau flyer"
+                    className="max-h-64 w-fit rounded-lg border object-contain"
+                  />
+                )}
+                <div className="flex gap-2">
+                  <Input
+                    id="job-flyer"
+                    type="file"
+                    accept={FLYER_TYPES.join(",")}
+                    onChange={(event) => {
+                      pickFlyer(event.target.files?.[0] ?? null);
+                      event.target.value = "";
+                    }}
+                  />
+                  {(flyerFile || draft.flyer) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        pickFlyer(null);
+                        setDraft((prev) => ({ ...prev, flyer: "" }));
+                      }}
+                    >
+                      Hapus flyer
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="job-applyUrl">
