@@ -1,62 +1,92 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getProfile } from "@/modules/company-profile/get-profile/get-profile.service";
-import { Chip } from "@/components/section";
+import { CtaBand, H2, PageHero, paragraphs } from "@/components/section";
 
 export const metadata: Metadata = {
-  title: "Layanan | PT. Antar Mitra Persada",
+  title: "Layanan",
   description:
     "Pengadaan obat, BMHP, dan alat kesehatan melalui LPSE dan e-Katalog INAPROC dengan sistem satu pintu.",
 };
 
+const PRODUCTS = ["Obat-obatan", "BMHP", "Alat Kesehatan"];
+
 export default async function ServicesPage() {
-  const { advantageTitle, advantageBody, catalogUrl } = await getProfile();
+  const { advantageTitle, advantageBody, metrics, catalogUrl, phone } =
+    await getProfile();
+  const [lead, ...rest] = paragraphs(advantageBody);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
-      <Chip>Layanan Pengadaan</Chip>
-      <h1 className="mt-4 max-w-[20ch] text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
-        {advantageTitle || "Layanan"}
-      </h1>
+    <>
+      <PageHero
+        eyebrow="Layanan pengadaan"
+        title={advantageTitle || "Sistem satu pintu"}
+      >
+        {lead && (
+          <p className="max-w-[720px] text-xl leading-[1.6] text-pretty text-body">
+            {lead}
+          </p>
+        )}
+      </PageHero>
 
-      {advantageBody && (
-        <div className="mt-10 max-w-3xl rounded-3xl bg-muted p-8 sm:p-10">
-          <p className="leading-relaxed whitespace-pre-line">{advantageBody}</p>
-        </div>
+      <div className="wrap">
+        <ol className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] border-t border-foreground">
+          {PRODUCTS.map((name, index) => (
+            <li
+              key={name}
+              className="flex flex-col gap-2.5 border-b pt-7 pr-8 pb-10"
+            >
+              <span className="font-mono text-[13px] text-faint">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="text-2xl font-medium tracking-[-0.01em]">
+                {name}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {rest.length > 0 && (
+        <section className="wrap split py-[clamp(72px,10vw,128px)]">
+          <H2 className="text-[clamp(28px,3vw,36px)] leading-[1.15]">
+            Satu penyedia untuk semua merek dan prinsipal
+          </H2>
+          <div className="flex flex-col gap-6 text-lg leading-[1.65] text-body">
+            {rest.map((para) => (
+              <p key={para} className="text-pretty">
+                {para}
+              </p>
+            ))}
+          </div>
+        </section>
       )}
 
-      {/* Banner ajakan: satu-satunya panel gelap di halaman ini. */}
-      <section className="mt-16 rounded-3xl bg-ink px-8 py-12 text-ink-foreground sm:px-12">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div>
-            <h2 className="max-w-[24ch] text-2xl font-extrabold tracking-tight text-balance sm:text-3xl">
-              Mulai pengadaan lewat e-Katalog hari ini.
-            </h2>
-            <p className="mt-2 text-ink-foreground/70">
-              Seluruh kebutuhan obat, BMHP, dan alat kesehatan dari satu
-              penyedia.
-            </p>
+      {metrics.length > 0 && (
+        <section className="mb-[clamp(80px,10vw,120px)] bg-muted">
+          <div className="wrap split py-[clamp(56px,8vw,96px)]">
+            <H2 className="text-[clamp(28px,3vw,36px)] leading-[1.15]">
+              Melayani
+            </H2>
+            <dl className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-8">
+              {metrics.map((metric) => (
+                <div key={metric.label} className="flex flex-col gap-1.5">
+                  <dt className="text-[15px] font-medium">{metric.label}</dt>
+                  <dd className="order-first text-4xl font-medium tracking-[-0.02em]">
+                    {metric.value}
+                  </dd>
+                  {metric.note && (
+                    <dd className="text-sm leading-normal text-muted-foreground">
+                      {metric.note}
+                    </dd>
+                  )}
+                </div>
+              ))}
+            </dl>
           </div>
-          <div className="flex flex-wrap gap-4">
-            {catalogUrl && (
-              <a
-                href={catalogUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full bg-background px-6 py-3 text-sm font-semibold text-foreground transition-opacity hover:opacity-90"
-              >
-                Lihat Katalog INAPROC ↗
-              </a>
-            )}
-            <Link
-              href="/contact"
-              className="rounded-full border border-white/25 px-6 py-3 text-sm font-semibold transition-colors hover:bg-white/10"
-            >
-              Hubungi Kami
-            </Link>
-          </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      )}
+
+      <CtaBand catalogUrl={catalogUrl} phone={phone} />
+    </>
   );
 }
