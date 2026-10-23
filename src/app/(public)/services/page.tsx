@@ -29,7 +29,7 @@ export default async function ServicesPage() {
       </PageHero>
 
       <div className="wrap">
-        <ol className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] border-t border-foreground">
+        <ol className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] border-t border-foreground">
           {PRODUCTS.map((name, index) => (
             <li
               key={name}
@@ -67,7 +67,7 @@ export default async function ServicesPage() {
             <H2 className="text-[clamp(28px,3vw,36px)] leading-[1.15]">
               Melayani
             </H2>
-            <dl className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-8">
+            <dl className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))] gap-8">
               {metrics.map((metric) => (
                 <div key={metric.label} className="flex flex-col gap-1.5">
                   <dt className="text-[15px] font-medium">{metric.label}</dt>

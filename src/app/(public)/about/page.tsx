@@ -33,28 +33,29 @@ export default async function AboutPage() {
 
   return (
     <>
-      {/* H1 sengaja lebih kecil dari halaman lain: isinya kalimat profil
-          utuh, bukan judul. */}
-      <section className="wrap flex flex-col gap-7 pt-[clamp(64px,10vw,120px)] pb-[clamp(56px,7vw,88px)]">
-        <Eyebrow className="rise">Profil perusahaan</Eyebrow>
-        <h1
-          className="rise max-w-[1000px] text-[clamp(32px,4.2vw,52px)] leading-[1.12] font-medium tracking-[-0.025em] text-pretty"
-          style={{ animationDelay: "60ms" }}
-        >
-          {lead || "Tentang Kami"}
-        </h1>
-      </section>
-
-      <div className="wrap">
-        <div className="relative h-[clamp(260px,40vw,520px)]">
-          <Image
-            src="/graha-berseri.jpg"
-            alt="Graha Berseri, Sukoharjo"
-            fill
-            priority
-            sizes="(max-width: 1280px) 100vw, 1120px"
-            className="rounded-[4px] object-cover object-[center_40%]"
-          />
+      {/* Hero + foto pas satu layar. H1 sengaja lebih kecil dari halaman
+          lain: isinya kalimat profil utuh, bukan judul. */}
+      <div className="mx-auto flex min-h-[calc(100svh-75px)] max-w-[1280px] flex-col pb-[clamp(20px,4vh,40px)]">
+        <section className="wrap flex w-full flex-col gap-[clamp(20px,3.5vh,28px)] pt-[clamp(36px,7vh,96px)] pb-[clamp(28px,4.5vh,48px)]">
+          <Eyebrow className="rise">Profil perusahaan</Eyebrow>
+          <h1
+            className="rise max-w-[1000px] text-[clamp(28px,min(4.2vw,6vh),52px)] leading-[1.12] font-medium tracking-[-0.025em] text-pretty"
+            style={{ animationDelay: "60ms" }}
+          >
+            {lead || "Tentang Kami"}
+          </h1>
+        </section>
+        <div className="wrap flex w-full flex-1">
+          <div className="relative min-h-[clamp(220px,42vw,280px)] flex-1 overflow-hidden rounded-[4px] bg-muted">
+            <Image
+              src="/graha-berseri-2.jpg"
+              alt="Graha Berseri, Sukoharjo"
+              fill
+              priority
+              sizes="(max-width: 1280px) 100vw, 1120px"
+              className="object-cover object-[center_40%]"
+            />
+          </div>
         </div>
       </div>
 

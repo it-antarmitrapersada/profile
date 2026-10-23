@@ -1,457 +1,418 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type {
-  CompanyProfile,
-  CoreValue,
-  Metric,
-} from "../company-profile.dto";
-import { useUpdateProfile } from "../hooks/use-update-profile";
+import { AdminPage, AdminSection } from "@/components/admin/admin-page";
+import { useAdminMutation } from "@/hooks/use-admin-mutation";
+import { cn } from "@/lib/utils";
+import type { CompanyProfile, Metric } from "../company-profile.dto";
+import { updateProfileAction } from "../update-profile/update-profile.action";
 
-const EMPTY_VALUE: CoreValue = { name: "", description: "" };
+export type ProfileSection = "home" | "about" | "services" | "contact";
+
+const PAGES: Record<ProfileSection, { title: string; heading: string; description: string }> = {
+  home: {
+    title: "Beranda",
+    heading: "Beranda",
+    description: "Angka, legalitas, dan jangkauan wilayah yang tampil di halaman utama.",
+  },
+  about: {
+    title: "Tentang",
+    heading: "Tentang perusahaan",
+    description: "Profil, visi, misi, nilai HEBAT, dan pendiri.",
+  },
+  services: {
+    title: "Layanan",
+    heading: "Layanan",
+    description: "Penjelasan sistem satu pintu dan tautan e-Katalog.",
+  },
+  contact: {
+    title: "Kontak & media sosial",
+    heading: "Kontak & media sosial",
+    description: "Tampil di halaman Kontak dan footer. Kolom kosong tidak ditampilkan.",
+  },
+};
+
 const EMPTY_METRIC: Metric = { label: "", value: "", note: "" };
+const MONO = "font-mono text-[13px]";
 
-/** Satu baris teks per item — dipakai untuk misi dan jangkauan wilayah. */
-const toLines = (text: string) =>
-  text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+type TextKey = {
+  [K in keyof CompanyProfile]: CompanyProfile[K] extends string ? K : never;
+}[keyof CompanyProfile];
 
-export function ProfileForm({ profile }: { profile: CompanyProfile }) {
-  // ponytail: misi dan jangkauan diedit sebagai satu textarea, satu per baris.
-  // Ganti ke baris berulang kalau item-itemnya butuh field sendiri.
-  const [mission, setMission] = useState(profile.mission.join("\n"));
-  const [coverage, setCoverage] = useState(profile.coverage.join("\n"));
-  const [coreValues, setCoreValues] = useState<CoreValue[]>(profile.coreValues);
-  const [metrics, setMetrics] = useState<Metric[]>(profile.metrics);
-  const { mutate, isPending, isSuccess, error } = useUpdateProfile();
+/** Satu kolom: label di atas, petunjuk di bawah. */
+const Row = ({
+  label,
+  hint,
+  htmlFor,
+  children,
+}: {
+  label: React.ReactNode;
+  hint?: string;
+  htmlFor?: string;
+  children: React.ReactNode;
+}) => (
+  <div className="flex flex-col gap-2">
+    <Label htmlFor={htmlFor}>{label}</Label>
+    {children}
+    {hint && <p className="text-[13px] text-subtle">{hint}</p>}
+  </div>
+);
 
-  const patchValue = (index: number, patch: Partial<CoreValue>) =>
-    setCoreValues((values) =>
-      values.map((value, i) => (i === index ? { ...value, ...patch } : value)),
-    );
+export function ProfileForm({
+  profile,
+  section,
+}: {
+  profile: CompanyProfile;
+  section: ProfileSection;
+}) {
+  // Metrik tampil sebagai tabel tiga baris tetap.
+  const [initial] = useState(() => ({
+    ...profile,
+    metrics: [
+      ...profile.metrics,
+      ...Array(Math.max(0, 3 - profile.metrics.length)).fill(EMPTY_METRIC),
+    ],
+  }));
+  const [saved, setSaved] = useState(initial);
+  const [draft, setDraft] = useState(initial);
+  const [savedAt, setSavedAt] = useState("");
+  const [region, setRegion] = useState("");
+  const { mutate, isPending } = useAdminMutation(
+    updateProfileAction,
+    "Perubahan disimpan",
+  );
+  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  const page = PAGES[section];
 
-  const patchMetric = (index: number, patch: Partial<Metric>) =>
-    setMetrics((items) =>
-      items.map((item, i) => (i === index ? { ...item, ...patch } : item)),
-    );
+  const text = (key: TextKey) => ({
+    id: key,
+    value: draft[key],
+    onChange: (
+      event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => setDraft((prev) => ({ ...prev, [key]: event.target.value })),
+  });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const patchList = <K extends "metrics" | "coreValues">(
+    key: K,
+    index: number,
+    patch: Partial<CompanyProfile[K][number]>,
+  ) =>
+    setDraft((prev) => ({
+      ...prev,
+      [key]: prev[key].map((item, i) => (i === index ? { ...item, ...patch } : item)),
+    }));
+
+  const addRegion = () => {
+    const name = region.trim();
+    if (name && !draft.coverage.includes(name)) {
+      setDraft((prev) => ({ ...prev, coverage: [...prev.coverage, name] }));
+    }
+    setRegion("");
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const text = (name: string) => (form.get(name) as string) ?? "";
-
-    mutate({
-      about: text("about"),
-      vision: text("vision"),
-      mission: toLines(mission),
-      coreValues: coreValues.filter((value) => value.name.trim()),
-      metrics: metrics.filter((metric) => metric.label.trim()),
-      totalCustomers: text("totalCustomers"),
-      coverage: toLines(coverage),
-      advantageTitle: text("advantageTitle"),
-      advantageBody: text("advantageBody"),
-      catalogUrl: text("catalogUrl"),
-      pbfLicenseNo: text("pbfLicenseNo"),
-      cdobCertNo: text("cdobCertNo"),
-      businessIdNo: text("businessIdNo"),
-      founderName: text("founderName"),
-      founderRole: text("founderRole"),
-      founderNote: text("founderNote"),
-      address: text("address"),
-      phone: text("phone"),
-      email: text("email"),
-      mapsEmbedUrl: text("mapsEmbedUrl"),
-    });
+    mutate(
+      {
+        ...draft,
+        mission: draft.mission.map((line) => line.trim()).filter(Boolean),
+        metrics: draft.metrics.filter(
+          (metric) => metric.label.trim() && metric.value.trim(),
+        ),
+      },
+      {
+        onSuccess: () => {
+          setSaved(draft);
+          setSavedAt(
+            new Date().toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          );
+        },
+      },
+    );
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Tentang Perusahaan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="about">Tentang Kami</FieldLabel>
-              <Textarea
-                id="about"
-                name="about"
-                rows={8}
-                defaultValue={profile.about}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="vision">Visi</FieldLabel>
-              <Textarea
-                id="vision"
-                name="vision"
-                rows={3}
-                defaultValue={profile.vision}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="mission">Misi</FieldLabel>
-              <Textarea
-                id="mission"
-                rows={6}
-                value={mission}
-                onChange={(event) => setMission(event.target.value)}
-              />
-              <FieldDescription>
-                Satu baris ditampilkan sebagai paragraf. Beberapa baris
-                ditampilkan sebagai daftar bernomor, satu poin per baris.
-                Baris kosong diabaikan.
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Nilai Perusahaan</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <FieldDescription>
-            Huruf awal setiap nilai ditampilkan besar di halaman dan urutannya
-            membentuk sebuah kata. Mengubah urutan, mengganti nama, atau
-            menghapus satu nilai akan mengubah kata itu.
-          </FieldDescription>
-          {coreValues.map((value, index) => (
-            <div
-              key={index}
-              className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-start"
+    <AdminPage
+      {...page}
+      topbar={
+        <>
+          <span
+            role="status"
+            className={cn(
+              "text-[13px] max-sm:hidden",
+              dirty ? "text-[#a15c07]" : "text-subtle",
+            )}
+          >
+            {dirty
+              ? "Ada perubahan belum disimpan"
+              : savedAt
+                ? `Tersimpan ${savedAt}`
+                : "Semua perubahan tersimpan"}
+          </span>
+          <Button type="submit" form="profile-form" disabled={isPending || !dirty}>
+            {isPending ? "Menyimpan…" : "Simpan perubahan"}
+          </Button>
+        </>
+      }
+    >
+      <form id="profile-form" onSubmit={handleSubmit} className="contents">
+        {section === "home" && (
+          <>
+            <AdminSection
+              title="Angka pelanggan"
+              description='Diisi manual. Tulis apa adanya, misalnya "120+".'
             >
-              <div className="grid flex-1 gap-3">
-                <Input
-                  aria-label={`Nama nilai ${index + 1}`}
-                  placeholder="Nama nilai"
-                  value={value.name}
-                  onChange={(event) =>
-                    patchValue(index, { name: event.target.value })
-                  }
+              <Row label="Total pelanggan" htmlFor="totalCustomers">
+                <Input {...text("totalCustomers")} className="max-w-[200px]" />
+              </Row>
+              <div className="grid gap-x-3 gap-y-2 sm:grid-cols-[120px_1fr_1.6fr]">
+                {["Angka", "Label", "Keterangan"].map((label) => (
+                  <span key={label} className="text-[13px] text-subtle max-sm:hidden">
+                    {label}
+                  </span>
+                ))}
+                {draft.metrics.map((metric, index) => (
+                  <div key={index} className="contents max-sm:mb-3 max-sm:grid max-sm:gap-2">
+                    {(["value", "label", "note"] as const).map((key) => (
+                      <Input
+                        key={key}
+                        aria-label={`${{ value: "Angka", label: "Label", note: "Keterangan" }[key]} ${index + 1}`}
+                        placeholder={{ value: "120+", label: "Rumah Sakit", note: "Keterangan" }[key]}
+                        value={metric[key]}
+                        onChange={(event) =>
+                          patchList("metrics", index, { [key]: event.target.value })
+                        }
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </AdminSection>
+
+            <AdminSection
+              title="Legalitas"
+              description="Isi hanya nomor dari dokumen resmi. Kolom kosong tidak ditampilkan."
+            >
+              {(
+                [
+                  ["pbfLicenseNo", "Izin PBF"],
+                  ["cdobCertNo", "Sertifikat CDOB"],
+                  ["businessIdNo", "NIB"],
+                ] as const
+              ).map(([key, label]) => (
+                <div key={key} className="grid gap-2 sm:grid-cols-[160px_1fr] sm:items-center sm:gap-3">
+                  <Label htmlFor={key}>{label}</Label>
+                  <Input {...text(key)} className={MONO} />
+                </div>
+              ))}
+            </AdminSection>
+
+            <AdminSection
+              title="Jangkauan wilayah"
+              description="Tekan Enter untuk menambah wilayah."
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                {draft.coverage.map((name) => (
+                  <span
+                    key={name}
+                    className="flex h-7 items-center gap-1 rounded-full border bg-[#f7f8f8] pr-1 pl-2.5 text-[13px]"
+                  >
+                    {name}
+                    <button
+                      type="button"
+                      aria-label={`Hapus ${name}`}
+                      onClick={() =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          coverage: prev.coverage.filter((item) => item !== name),
+                        }))
+                      }
+                      className="grid size-5 place-items-center rounded-full text-subtle hover:text-foreground"
+                    >
+                      <XIcon className="size-3" />
+                    </button>
+                  </span>
+                ))}
+                <input
+                  aria-label="Tambah wilayah"
+                  placeholder="Tambah wilayah…"
+                  value={region}
+                  onChange={(event) => setRegion(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter") return;
+                    event.preventDefault();
+                    addRegion();
+                  }}
+                  className="h-7 w-[150px] rounded-full border border-dashed border-[#cfd5d2] px-2.5 text-[13px] outline-none focus:border-primary"
                 />
+              </div>
+            </AdminSection>
+          </>
+        )}
+
+        {section === "about" && (
+          <>
+            <AdminSection>
+              <Row
+                label="Profil perusahaan"
+                htmlFor="about"
+                hint="Paragraf pertama dipakai sebagai judul halaman Tentang. Pisahkan paragraf dengan satu baris kosong."
+              >
+                <Textarea {...text("about")} rows={8} />
+              </Row>
+              <Row label="Visi" htmlFor="vision">
+                <Textarea {...text("vision")} rows={2} />
+              </Row>
+              <Row label="Misi" htmlFor="mission" hint="Satu poin per baris.">
                 <Textarea
-                  aria-label={`Deskripsi nilai ${index + 1}`}
-                  placeholder="Deskripsi singkat"
-                  rows={2}
-                  value={value.description}
+                  id="mission"
+                  rows={4}
+                  value={draft.mission.join("\n")}
                   onChange={(event) =>
-                    patchValue(index, { description: event.target.value })
+                    setDraft((prev) => ({
+                      ...prev,
+                      mission: event.target.value.split("\n"),
+                    }))
                   }
                 />
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Hapus nilai ${index + 1}`}
-                onClick={() =>
-                  setCoreValues((values) =>
-                    values.filter((_, i) => i !== index),
-                  )
-                }
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            className="self-start"
-            disabled={coreValues.length >= 12}
-            onClick={() => setCoreValues((values) => [...values, EMPTY_VALUE])}
-          >
-            <Plus className="size-4" /> Tambah nilai
-          </Button>
-        </CardContent>
-      </Card>
+              </Row>
+            </AdminSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bukti &amp; Jangkauan</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {metrics.map((metric, index) => (
-            <div
-              key={index}
-              className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-start"
+            <AdminSection
+              title="Nilai perusahaan"
+              description="Urutan membentuk akronim HEBAT. Jangan diubah tanpa persetujuan manajemen."
             >
-              <div className="grid flex-1 gap-3 sm:grid-cols-[1fr_8rem]">
-                <Input
-                  aria-label={`Label angka ${index + 1}`}
-                  placeholder="Rumah Sakit"
-                  value={metric.label}
-                  onChange={(event) =>
-                    patchMetric(index, { label: event.target.value })
-                  }
-                />
-                <Input
-                  aria-label={`Angka ${index + 1}`}
-                  placeholder="120+"
-                  value={metric.value}
-                  onChange={(event) =>
-                    patchMetric(index, { value: event.target.value })
-                  }
-                />
-                <Input
-                  aria-label={`Keterangan angka ${index + 1}`}
-                  className="sm:col-span-2"
-                  placeholder="RS pemerintah dan swasta di Indonesia"
-                  value={metric.note}
-                  onChange={(event) =>
-                    patchMetric(index, { note: event.target.value })
-                  }
-                />
+              {draft.coreValues.map((value, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-[36px_1fr] items-center gap-3 sm:grid-cols-[36px_160px_1fr]"
+                >
+                  <span
+                    aria-hidden
+                    className="grid size-9 place-items-center rounded-lg bg-[#eef3f1] font-semibold text-primary"
+                  >
+                    {initial.coreValues[index]?.name.charAt(0).toUpperCase()}
+                  </span>
+                  <Input
+                    aria-label={`Nama nilai ${index + 1}`}
+                    value={value.name}
+                    onChange={(event) =>
+                      patchList("coreValues", index, { name: event.target.value })
+                    }
+                  />
+                  <Input
+                    aria-label={`Deskripsi nilai ${index + 1}`}
+                    className="max-sm:col-span-2"
+                    value={value.description}
+                    onChange={(event) =>
+                      patchList("coreValues", index, {
+                        description: event.target.value,
+                      })
+                    }
+                  />
+                </div>
+              ))}
+            </AdminSection>
+
+            <AdminSection title="Pendiri">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Row label="Nama" htmlFor="founderName">
+                  <Input {...text("founderName")} />
+                </Row>
+                <Row label="Jabatan" htmlFor="founderRole">
+                  <Input {...text("founderRole")} />
+                </Row>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Hapus angka ${index + 1}`}
-                onClick={() =>
-                  setMetrics((items) => items.filter((_, i) => i !== index))
-                }
+              <Row
+                label="Catatan"
+                htmlFor="founderNote"
+                hint="Kosongkan nama untuk menyembunyikan seluruh bagian Pendiri."
               >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            className="self-start"
-            disabled={metrics.length >= 6}
-            onClick={() => setMetrics((items) => [...items, EMPTY_METRIC])}
-          >
-            <Plus className="size-4" /> Tambah angka
-          </Button>
-
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="totalCustomers">
-                Total Pelanggan (chip foto hero)
-              </FieldLabel>
-              <Input
-                id="totalCustomers"
-                name="totalCustomers"
-                placeholder="1000+"
-                defaultValue={profile.totalCustomers}
-              />
-              <FieldDescription>
-                Angka bebas, diisi manual — tidak dihitung otomatis.
-                Kosongkan untuk menyembunyikan chip di foto beranda.
-              </FieldDescription>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="coverage">Jangkauan wilayah</FieldLabel>
-              <Textarea
-                id="coverage"
-                rows={8}
-                value={coverage}
-                onChange={(event) => setCoverage(event.target.value)}
-              />
-              <FieldDescription>
-                Satu wilayah per baris. Baris kosong diabaikan.
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Keunggulan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="advantageTitle">Judul</FieldLabel>
-              <Input
-                id="advantageTitle"
-                name="advantageTitle"
-                defaultValue={profile.advantageTitle}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="advantageBody">Penjelasan</FieldLabel>
-              <Textarea
-                id="advantageBody"
-                name="advantageBody"
-                rows={8}
-                defaultValue={profile.advantageBody}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="catalogUrl">Tautan Katalog INAPROC</FieldLabel>
-              <Input
-                id="catalogUrl"
-                name="catalogUrl"
-                defaultValue={profile.catalogUrl}
-              />
-              <FieldDescription>
-                Alamat etalase e-Katalog perusahaan. Ditampilkan sebagai ajakan
-                utama di beranda dan halaman Layanan. Kosongkan untuk
-                menyembunyikannya.
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Legalitas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="pbfLicenseNo">Nomor Izin PBF</FieldLabel>
-              <Input
-                id="pbfLicenseNo"
-                name="pbfLicenseNo"
-                defaultValue={profile.pbfLicenseNo}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="cdobCertNo">Nomor Sertifikat CDOB</FieldLabel>
-              <Input
-                id="cdobCertNo"
-                name="cdobCertNo"
-                defaultValue={profile.cdobCertNo}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="businessIdNo">
-                Nomor Induk Berusaha (NIB)
-              </FieldLabel>
-              <Input
-                id="businessIdNo"
-                name="businessIdNo"
-                defaultValue={profile.businessIdNo}
-              />
-              <FieldDescription>
-                Isi hanya nomor asli dari dokumen resmi. Kosongkan untuk
-                menyembunyikan field itu dari halaman publik.
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Owner</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="founderName">Nama</FieldLabel>
-              <Input
-                id="founderName"
-                name="founderName"
-                defaultValue={profile.founderName}
-              />
-              <FieldDescription>
-                Kosongkan untuk menyembunyikan seluruh bagian Owner dari
-                halaman publik.
-              </FieldDescription>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="founderRole">Jabatan</FieldLabel>
-              <Input
-                id="founderRole"
-                name="founderRole"
-                defaultValue={profile.founderRole}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="founderNote">Keterangan</FieldLabel>
-              <Textarea
-                id="founderNote"
-                name="founderNote"
-                rows={4}
-                defaultValue={profile.founderNote}
-              />
-            </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Kontak</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="address">Alamat</FieldLabel>
-              <Textarea
-                id="address"
-                name="address"
-                rows={3}
-                defaultValue={profile.address}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="phone">Telepon</FieldLabel>
-              <Input id="phone" name="phone" defaultValue={profile.phone} />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                defaultValue={profile.email}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="mapsEmbedUrl">URL Embed Peta</FieldLabel>
-              <Input
-                id="mapsEmbedUrl"
-                name="mapsEmbedUrl"
-                defaultValue={profile.mapsEmbedUrl}
-              />
-              <FieldDescription>
-                Ambil dari Google Maps → Bagikan → Sematkan peta → salin nilai
-                src pada iframe. Kosongkan untuk menyembunyikan peta.
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Menyimpan…" : "Simpan"}
-        </Button>
-        {isSuccess && (
-          <span role="status" className="text-sm text-muted-foreground">
-            Tersimpan.
-          </span>
+                <Textarea {...text("founderNote")} rows={3} />
+              </Row>
+            </AdminSection>
+          </>
         )}
-        {error && (
-          <span role="alert" className="text-sm text-destructive">
-            {error.message}
-          </span>
+
+        {section === "services" && (
+          <AdminSection>
+            <Row label="Judul" htmlFor="advantageTitle">
+              <Input {...text("advantageTitle")} />
+            </Row>
+            <Row
+              label="Isi"
+              htmlFor="advantageBody"
+              hint="Pisahkan paragraf dengan satu baris kosong."
+            >
+              <Textarea {...text("advantageBody")} rows={8} />
+            </Row>
+            <Row
+              label="URL katalog INAPROC"
+              htmlFor="catalogUrl"
+              hint='Dipakai oleh semua tombol "Buka Katalog INAPROC".'
+            >
+              <Input {...text("catalogUrl")} type="url" className={MONO} />
+            </Row>
+          </AdminSection>
         )}
-      </div>
-    </form>
+
+        {section === "contact" && (
+          <>
+            <AdminSection>
+              <Row label="Alamat" htmlFor="address">
+                <Textarea {...text("address")} rows={2} />
+              </Row>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
+                <Row label="Telepon" htmlFor="phone">
+                  <Input {...text("phone")} type="tel" />
+                </Row>
+                <Row label="Surel" htmlFor="email">
+                  <Input {...text("email")} type="email" />
+                </Row>
+              </div>
+              <Row
+                label="URL embed Google Maps"
+                htmlFor="mapsEmbedUrl"
+                hint="Google Maps → Bagikan → Sematkan peta → salin URL di dalam src."
+              >
+                <Input
+                  {...text("mapsEmbedUrl")}
+                  type="url"
+                  placeholder="https://www.google.com/maps/embed?pb=…"
+                  className={MONO}
+                />
+              </Row>
+            </AdminSection>
+
+            <AdminSection title="Media sosial">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
+                <Row label="Instagram" htmlFor="instagramUrl">
+                  <Input
+                    {...text("instagramUrl")}
+                    type="url"
+                    placeholder="https://instagram.com/…"
+                  />
+                </Row>
+                <Row label="LinkedIn" htmlFor="linkedinUrl">
+                  <Input
+                    {...text("linkedinUrl")}
+                    type="url"
+                    placeholder="https://linkedin.com/company/…"
+                  />
+                </Row>
+              </div>
+            </AdminSection>
+          </>
+        )}
+      </form>
+    </AdminPage>
   );
 }
